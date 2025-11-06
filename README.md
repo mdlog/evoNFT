@@ -1,6 +1,10 @@
-# 🎮 EvoNFT - Evolving Digital Companions
-
-Full-featured dApp untuk NFTs yang berkembang dan berevolusi di Polygon Amoy Testnet. NFT Anda dapat di-mint, di-level up, dibreeding, di-stake, dan diperdagangkan di marketplace.
+<div align="center">
+  <img src="evoNFT-logo11.png" alt="EvoNFT Logo" width="200"/>
+  
+  # 🎮 EvoNFT - Evolving Digital Companions
+  
+  Full-featured dApp untuk NFTs yang berkembang dan berevolusi di Polygon Amoy Testnet. NFT Anda dapat di-mint, di-level up, dibreeding, di-stake, dan diperdagangkan di marketplace.
+</div>
 
 ## ✨ Features
 
