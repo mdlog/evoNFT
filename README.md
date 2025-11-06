@@ -17,7 +17,7 @@
 - 📈 **Level Up** - Feed & train to increase stats and XP
 - 🧬 **Evolution System** - NFTs transform appearance with 24h cooldown & AI signatures
 - 🧬 **Breeding** - Combine 2 NFTs to create offspring with inherited traits
-- � **Stakeing** - Stake NFTs to earn 50-100 XP/day + 0.01-0.02 MATIC/day with tier bonuses
+- 💎 **Staking** - Stake NFTs to earn 0.01-0.02 MATIC/day with tier bonuses (MATIC only, no XP)
 - 🛒 **Marketplace** - Buy and sell NFTs peer-to-peer with 2.5% platform fee
 - 🌈 **Multi-Wallet** - RainbowKit integration (MetaMask, WalletConnect, Coinbase, etc.)
 
@@ -39,7 +39,8 @@ Your EvoNFT grows stronger as you interact with it:
 - 🍖 **Feeding** - +10 XP, increases Health
 - 💪 **Training** - +20 XP, increases Strength
 - 🧬 **Breeding** - +50 XP (both parents)
-- 💎 **Staking** - +5 XP per day
+
+**Note:** Staking earns MATIC rewards, not XP. To gain XP, use Feed/Train/Breed actions.
 
 ### Rarity Tiers
 NFTs are categorized by their base stats and potential:
@@ -70,7 +71,7 @@ Each NFT has 3 core attributes:
 - Feed: +5 Health, +10 XP (Cost: 0.001 MATIC)
 - Train: +5 Strength, +20 XP (Cost: 0.002 MATIC)
 - Breed: +50 XP for both parents (Cost: 0.01 MATIC, 24h cooldown)
-- Stake: +5 XP per day + MATIC rewards
+- Stake: Earn MATIC rewards (no XP)
 - Level Up: +2 to all stats automatically
 
 ## 🧬 Evolution System
@@ -143,17 +144,6 @@ Stake your NFTs to earn XP and MATIC rewards automatically!
 - Node.js 18+
 - Wallet (MetaMask recommended)
 - Polygon Amoy testnet MATIC ([Get from faucet](https://faucet.polygon.technology))
-
-### Installation
-
-```bash
-# Clone repository
-git clone <repository-url>
-cd evonft-app
-
-# Install dependencies
-npm install
-
 # Setup environment
 cp .env.example .env
 # Edit .env and add your VITE_WALLETCONNECT_PROJECT_ID
