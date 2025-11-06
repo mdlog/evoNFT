@@ -13,10 +13,12 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     <div className="flex items-center space-x-8">
-                        <Link to="/" className="flex items-center space-x-2 group">
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 animate-glow">
-                                <span className="text-xl">🐉</span>
-                            </div>
+                        <Link to="/" className="flex items-center space-x-4 group">
+                            <img
+                                src="/logo.png"
+                                alt="EvoNFT Logo"
+                                className="w-12 h-12 rounded-xl group-hover:scale-110 transition-transform duration-300 object-contain"
+                            />
                             <span className="text-xl font-bold text-gradient">EvoNFT</span>
                         </Link>
 

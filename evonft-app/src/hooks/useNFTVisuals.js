@@ -15,16 +15,20 @@ export function useNFTVisuals(nfts = []) {
 
         setLoading(true)
 
-        const processNFTs = async () => {
+        const processNFTs = () => {
             const processed = nfts.map(nft => {
-                // Jika NFT sudah memiliki visual data, gunakan yang ada
-                if (nft.creatureType && nft.rarity && nft.image) {
-                    return nft
-                }
-
-                // Generate visual data baru
                 const tokenId = nft.id || nft.tokenId
                 const level = nft.level || 1
+
+                // Check if image is placeholder or missing
+                const isPlaceholder = !nft.image ||
+                    nft.image.includes('placeholder') ||
+                    nft.image.includes('via.placeholder.com');
+
+                // If has valid SVG image and not placeholder, use existing
+                if (nft.image && nft.image.startsWith('data:image/svg') && !isPlaceholder) {
+                    return nft;
+                }
 
                 // Tentukan rarity berdasarkan level atau random
                 let rarity = nft.rarity
@@ -53,7 +57,7 @@ export function useNFTVisuals(nfts = []) {
                 // Generate creature type jika belum ada
                 const creatureType = nft.creatureType || getRandomCreatureType(rarity)
 
-                // Generate complete metadata
+                // Generate complete metadata with SVG image
                 const visualData = generateNFTMetadata(tokenId, {
                     level,
                     rarity,
@@ -61,6 +65,13 @@ export function useNFTVisuals(nfts = []) {
                     name: nft.name || `EvoNFT #${tokenId}`,
                     description: nft.description
                 })
+
+                console.log(`🎨 Generated visual for NFT #${tokenId}:`, {
+                    creatureType,
+                    rarity,
+                    hasImage: !!visualData.image,
+                    imageType: visualData.image?.substring(0, 30) + '...'
+                });
 
                 return {
                     ...nft,
@@ -76,7 +87,8 @@ export function useNFTVisuals(nfts = []) {
         }
 
         processNFTs()
-    }, [nfts])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [JSON.stringify(nfts.map(n => ({ id: n.id || n.tokenId, level: n.level, rarity: n.rarity })))])
 
     return {
         visualNFTs,

@@ -1,22 +1,22 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Web3Provider } from './context/Web3Context'
-import Navbar from './components/Navbar'
+import { RainbowWeb3Provider } from './context/RainbowWeb3Context'
+import NavbarRainbow from './components/NavbarRainbow'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Mint from './pages/Mint'
 import Marketplace from './pages/Marketplace'
-import MyCollection from './pages/MyCollection'
-import NFTDetail from './pages/NFTDetail'
-import BreedingLab from './pages/BreedingLab'
-import Staking from './pages/Staking'
+import MyCollection from './pages/MyCollectionIntegrated'
+import NFTDetail from './pages/NFTDetailIntegrated'
+import BreedingLab from './pages/BreedingLabIntegrated'
+import Staking from './pages/StakingIntegrated'
 import Profile from './pages/Profile'
 
 function App() {
     return (
-        <Web3Provider>
+        <RainbowWeb3Provider>
             <Router>
                 <div className="min-h-screen flex flex-col">
-                    <Navbar />
+                    <NavbarRainbow />
                     <main className="flex-1">
                         <Routes>
                             <Route path="/" element={<Home />} />
@@ -31,7 +31,7 @@ function App() {
                     <Footer />
                 </div>
             </Router>
-        </Web3Provider>
+        </RainbowWeb3Provider>
     )
 }
 

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useStaking, useStakingInfo, useNFTExtended } from '../hooks/useExtendedContract'
+import { useStaking, useStakingInfo, useNFTExtended, usePoolStats } from '../hooks/useExtendedContract'
 import { useMyNFTs } from '../hooks/useContract'
-import { useWeb3 } from '../context/Web3Context'
+import { useWeb3 } from '../context/RainbowWeb3Context'
 import { STAKING_CONTRACT } from '../config/contractsExtended'
 
 import { StakingCalculatorModal } from '../components/StakingCalculatorModal'
@@ -12,6 +12,7 @@ export default function Staking() {
     const { contractWithSigner: stakingContract, userStakes, loading: stakingLoading } = useStaking()
     const { contractWithSigner: nftContract } = useNFTExtended()
     const { nfts: allNFTs } = useMyNFTs()
+    const { poolStats, loading: poolLoading } = usePoolStats()
     const [showStakeModal, setShowStakeModal] = useState(false)
     const [showUnstakeModal, setShowUnstakeModal] = useState(false)
     const [showRewardsModal, setShowRewardsModal] = useState(false)
@@ -54,11 +55,35 @@ export default function Staking() {
         )
     }
 
-    const poolStats = [
-        { value: userStakes.length.toString(), label: 'Your Staked', icon: '🔒' },
-        { value: '2,156', label: 'Total Stakers', icon: '👥' },
-        { value: '50 XP', label: 'Daily Base Rate', icon: '📈' },
-        { value: '125%', label: 'Current APY', icon: '💰' }
+    // Debug: Log pool stats
+    useEffect(() => {
+        console.log('📊 Pool Stats State:', { poolStats, poolLoading });
+        if (!poolLoading) {
+            console.log('📊 Pool Stats (Real Data):', poolStats);
+        }
+    }, [poolStats, poolLoading]);
+
+    const poolStatsDisplay = [
+        {
+            value: poolStats?.userStakedCount?.toString() || '0',
+            label: 'Your Staked',
+            icon: '🔒'
+        },
+        {
+            value: poolStats?.totalStaked?.toString() || '0',
+            label: 'Total Staked NFTs',
+            icon: '👥'
+        },
+        {
+            value: '50 XP',
+            label: 'Daily Base Rate',
+            icon: '📈'
+        },
+        {
+            value: `${Number(poolStats?.contractBalance || 0).toFixed(2)} MATIC`,
+            label: 'Reward Pool',
+            icon: '💰'
+        }
     ]
 
     const tiers = [
@@ -175,19 +200,29 @@ export default function Staking() {
 
                 {/* Pool Statistics */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    {poolStats.map((stat) => (
-                        <motion.div
-                            key={stat.label}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: poolStats.indexOf(stat) * 0.1 }}
-                            className="glass-strong rounded-2xl p-6 text-center border border-slate-700/50 hover:border-primary-500/50 transition-all group"
-                        >
-                            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{stat.icon}</div>
-                            <div className="text-3xl font-bold text-gradient mb-2">{stat.value}</div>
-                            <div className="text-slate-400">{stat.label}</div>
-                        </motion.div>
-                    ))}
+                    {poolLoading ? (
+                        Array(4).fill(0).map((_, i) => (
+                            <div key={i} className="glass-strong rounded-2xl p-6 text-center border border-slate-700/50 animate-pulse">
+                                <div className="h-10 w-10 bg-slate-700 rounded-full mx-auto mb-3"></div>
+                                <div className="h-8 bg-slate-700 rounded w-20 mx-auto mb-2"></div>
+                                <div className="h-4 bg-slate-700 rounded w-24 mx-auto"></div>
+                            </div>
+                        ))
+                    ) : (
+                        poolStatsDisplay.map((stat, index) => (
+                            <motion.div
+                                key={stat.label}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                className="glass-strong rounded-2xl p-6 text-center border border-slate-700/50 hover:border-primary-500/50 transition-all group"
+                            >
+                                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{stat.icon}</div>
+                                <div className="text-3xl font-bold text-gradient mb-2">{stat.value}</div>
+                                <div className="text-slate-400">{stat.label}</div>
+                            </motion.div>
+                        ))
+                    )}
                 </div>
 
                 {/* Action Buttons */}
@@ -261,11 +296,12 @@ export default function Staking() {
                     </div>
 
                     <div className="glass rounded-xl p-4">
-                        <h3 className="font-semibold mb-3">Additional Bonuses:</h3>
+                        <h3 className="font-semibold mb-3">How It Works:</h3>
                         <ul className="space-y-2 text-sm text-slate-300">
-                            <li>• Stake 5+ NFTs: +10% XP</li>
-                            <li>• Stake Rare/Epic: +25% XP</li>
-                            <li>• Stake Legendary: +50% XP</li>
+                            <li>• Stake your NFTs to earn passive rewards</li>
+                            <li>• Longer staking = Higher tier bonuses</li>
+                            <li>• Claim rewards anytime without unstaking</li>
+                            <li>• Unstaking automatically claims all pending rewards</li>
                         </ul>
                     </div>
                 </div>
@@ -364,7 +400,7 @@ function StakeModal({ unstakedNFTs, onClose, onStake, processing }) {
                                     <p className="text-sm text-secondary-500 mb-3">Level {nft.level || 1}</p>
 
                                     <div className="text-xs text-slate-400 mb-3">
-                                        Expected: 50+ XP/day
+                                        Base Rate: 50 XP/day + 0.01 MATIC/day
                                     </div>
 
                                     <button
@@ -391,8 +427,11 @@ function StakeModal({ unstakedNFTs, onClose, onStake, processing }) {
 }
 
 function RewardsModal({ userStakes, onClose, onClaim, processing }) {
-    const [totalXP, setTotalXP] = useState(0)
-    const [totalMATIC, setTotalMATIC] = useState(0)
+    const [rewardsData, setRewardsData] = useState({})
+
+    // Calculate totals from all rewards
+    const totalXP = Object.values(rewardsData).reduce((sum, r) => sum + (r?.xp || 0), 0)
+    const totalMATIC = Object.values(rewardsData).reduce((sum, r) => sum + (Number(r?.matic) || 0), 0)
 
     return (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
@@ -436,9 +475,11 @@ function RewardsModal({ userStakes, onClose, onClaim, processing }) {
                                 tokenId={tokenId}
                                 onClaim={() => onClaim(tokenId)}
                                 processing={processing}
-                                onRewardsUpdate={(xp, matic) => {
-                                    setTotalXP(prev => prev + Number(xp))
-                                    setTotalMATIC(prev => prev + Number(matic))
+                                onRewardsUpdate={(tokenId, xp, matic) => {
+                                    setRewardsData(prev => ({
+                                        ...prev,
+                                        [tokenId]: { xp, matic }
+                                    }))
                                 }}
                             />
                         ))}
@@ -528,9 +569,9 @@ function RewardNFTCard({ tokenId, onClaim, processing, onRewardsUpdate }) {
     // Update parent component with rewards data
     useEffect(() => {
         if (pendingRewards && onRewardsUpdate) {
-            onRewardsUpdate(pendingRewards.xp, pendingRewards.matic)
+            onRewardsUpdate(tokenId, pendingRewards.xp, pendingRewards.matic)
         }
-    }, [pendingRewards, onRewardsUpdate])
+    }, [tokenId, pendingRewards, onRewardsUpdate])
 
     if (loading) {
         return (

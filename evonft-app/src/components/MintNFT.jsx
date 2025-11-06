@@ -1,14 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContract, useContractStats } from '../hooks/useContract';
-import { useWeb3 } from '../context/Web3Context';
+import { useWeb3 } from '../context/RainbowWeb3Context';
 import { generateInitialMetadata, uploadMetadataToIPFS, parseContractError } from '../services/contractService';
 import { ethers } from 'ethers';
+import NetworkSwitcher from './NetworkSwitcher';
 
 export default function MintNFT() {
-    const { account } = useWeb3();
+    const { account, provider } = useWeb3();
     const { contractWithSigner } = useContract();
     const { stats, loading: statsLoading } = useContractStats();
+    const [currentChainId, setCurrentChainId] = useState(null);
+
+    // Get current chain ID
+    useEffect(() => {
+        if (provider) {
+            provider.getNetwork().then(network => {
+                setCurrentChainId(Number(network.chainId));
+            }).catch(err => {
+                console.error('Error getting network:', err);
+            });
+        }
+    }, [provider]);
 
     const [minting, setMinting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -16,8 +29,20 @@ export default function MintNFT() {
     const [mintedTokenId, setMintedTokenId] = useState(null);
 
     const handleMint = async () => {
-        if (!account || !contractWithSigner) {
+        console.log('🎯 Mint clicked');
+        console.log('👤 Account:', account);
+        console.log('📝 Contract with signer:', contractWithSigner);
+        console.log('🌐 Provider:', provider);
+
+        if (!account) {
+            console.error('❌ No account connected');
             setError('Please connect your wallet first');
+            return;
+        }
+
+        if (!contractWithSigner) {
+            console.error('❌ No contract with signer');
+            setError('Contract not initialized. Please refresh and try again.');
             return;
         }
 
@@ -25,33 +50,49 @@ export default function MintNFT() {
             setMinting(true);
             setError(null);
 
+            // Check balance
+            const balance = await provider.getBalance(account);
+            console.log('💰 Balance:', ethers.formatEther(balance), 'MATIC');
+
             // Step 1: Get next token ID
+            console.log('📊 Getting total minted...');
             const totalMinted = await contractWithSigner.totalMinted();
             const nextTokenId = Number(totalMinted);
-
-            console.log('Minting NFT #', nextTokenId);
+            console.log('✅ Next token ID:', nextTokenId);
 
             // Step 2: Generate metadata
+            console.log('🎨 Generating metadata...');
             const metadata = generateInitialMetadata(nextTokenId);
-            console.log('Generated metadata:', metadata);
+            console.log('✅ Metadata generated:', metadata);
 
             // Step 3: Upload to IPFS
+            console.log('📤 Uploading to IPFS...');
             const uri = await uploadMetadataToIPFS(metadata);
-            console.log('Uploaded to IPFS:', uri);
+            console.log('✅ Uploaded to IPFS:', uri);
 
-            // Step 4: Mint NFT
+            // Step 4: Get mint price
+            console.log('💵 Getting mint price...');
             const mintPrice = await contractWithSigner.mintPrice();
-            console.log('Mint price:', ethers.formatEther(mintPrice), 'MATIC');
+            console.log('✅ Mint price:', ethers.formatEther(mintPrice), 'MATIC');
 
+            // Check if enough balance
+            if (balance < mintPrice) {
+                throw new Error(`Insufficient balance. Need ${ethers.formatEther(mintPrice)} MATIC`);
+            }
+
+            // Step 5: Mint NFT
+            console.log('🚀 Sending mint transaction...');
             const tx = await contractWithSigner.mint(account, uri, {
-                value: mintPrice
+                value: mintPrice,
+                gasLimit: 500000 // Set explicit gas limit
             });
 
-            console.log('Transaction sent:', tx.hash);
+            console.log('✅ Transaction sent:', tx.hash);
+            console.log('⏳ Waiting for confirmation...');
 
-            // Step 5: Wait for confirmation
+            // Step 6: Wait for confirmation
             const receipt = await tx.wait();
-            console.log('Transaction confirmed:', receipt.hash);
+            console.log('✅ Transaction confirmed:', receipt.hash);
 
             // Step 6: Extract token ID from event
             const mintedEvent = receipt.logs.find(log => {
@@ -98,6 +139,12 @@ export default function MintNFT() {
 
     return (
         <div className="max-w-2xl mx-auto">
+            {/* Network Switcher */}
+            <NetworkSwitcher
+                currentChainId={currentChainId}
+                onSwitch={() => window.location.reload()}
+            />
+
             {/* Mint Card */}
             <div className="glass-strong rounded-2xl border border-slate-700/50 p-8">
                 <h2 className="text-3xl font-bold mb-6 text-center">
@@ -112,18 +159,32 @@ export default function MintNFT() {
                 </div>
 
                 {/* Stats */}
-                {!statsLoading && (
+                {!statsLoading && stats && (
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="text-center p-4 bg-slate-800/50 rounded-lg">
                             <div className="text-2xl font-bold text-primary-400">
-                                {stats.totalMinted}/{stats.maxSupply}
+                                {stats.totalMinted || 0}/{stats.maxSupply || 10000}
                             </div>
                             <div className="text-sm text-slate-400">Minted</div>
                         </div>
                         <div className="text-center p-4 bg-slate-800/50 rounded-lg">
                             <div className="text-2xl font-bold text-accent-400">
-                                {stats.mintPrice} MATIC
+                                {stats.mintPrice || '0.01'} MATIC
                             </div>
+                            <div className="text-sm text-slate-400">Price</div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Loading Stats */}
+                {statsLoading && (
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="text-center p-4 bg-slate-800/50 rounded-lg animate-pulse">
+                            <div className="h-8 bg-slate-700 rounded w-20 mx-auto mb-2"></div>
+                            <div className="text-sm text-slate-400">Minted</div>
+                        </div>
+                        <div className="text-center p-4 bg-slate-800/50 rounded-lg animate-pulse">
+                            <div className="h-8 bg-slate-700 rounded w-20 mx-auto mb-2"></div>
                             <div className="text-sm text-slate-400">Price</div>
                         </div>
                     </div>
@@ -151,7 +212,7 @@ export default function MintNFT() {
                 {/* Mint Button */}
                 <button
                     onClick={handleMint}
-                    disabled={minting || statsLoading || stats.totalMinted >= stats.maxSupply}
+                    disabled={minting || statsLoading || (stats && stats.totalMinted >= stats.maxSupply)}
                     className="w-full px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 hover:shadow-2xl hover:shadow-primary-500/50"
                 >
                     {minting ? (
@@ -159,12 +220,44 @@ export default function MintNFT() {
                             <span className="animate-spin">⟳</span>
                             Minting...
                         </span>
+                    ) : statsLoading ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <span className="animate-spin">⟳</span>
+                            Loading...
+                        </span>
+                    ) : !stats || stats.maxSupply === 0 ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <span className="text-yellow-400">⚠️</span>
+                            Contract Not Connected
+                        </span>
                     ) : stats.totalMinted >= stats.maxSupply ? (
                         'Sold Out'
                     ) : (
-                        `Mint for ${stats.mintPrice} MATIC`
+                        `Mint for ${stats.mintPrice || '0.01'} MATIC`
                     )}
                 </button>
+
+                {/* Debug Info (only in development) */}
+                {!stats || stats.maxSupply === 0 ? (
+                    <div className="mt-4 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
+                        <p className="text-yellow-200 text-sm mb-2">
+                            <strong>⚠️ Contract Connection Issue</strong>
+                        </p>
+                        <p className="text-yellow-200 text-xs mb-2">
+                            The contract stats are not loading. This could be due to:
+                        </p>
+                        <ul className="text-yellow-200 text-xs space-y-1 ml-4">
+                            <li>• Wrong network (should be Polygon Amoy)</li>
+                            <li>• RPC connection issue</li>
+                            <li>• Contract address not configured</li>
+                        </ul>
+                        <div className="mt-3 pt-3 border-t border-yellow-500/30">
+                            <p className="text-yellow-200 text-xs">
+                                <strong>Quick Fix:</strong> Try refreshing the page or switching to Polygon Amoy network in MetaMask
+                            </p>
+                        </div>
+                    </div>
+                ) : null}
 
                 {/* Progress Steps */}
                 {minting && (

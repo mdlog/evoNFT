@@ -34,10 +34,12 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                     {/* Brand Section */}
                     <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-500 rounded-xl flex items-center justify-center">
-                                <span className="text-xl">🐉</span>
-                            </div>
+                        <div className="flex items-center space-x-4">
+                            <img
+                                src="/logo.png"
+                                alt="EvoNFT Logo"
+                                className="w-12 h-12 rounded-xl object-contain"
+                            />
                             <span className="text-xl font-bold text-gradient">EvoNFT</span>
                         </div>
                         <p className="text-slate-400 text-sm leading-relaxed">

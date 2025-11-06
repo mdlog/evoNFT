@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test NFT Ownership</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #00ff00;
+        }
+
+        h1 {
+            color: #00ff00;
+            text-align: center;
+        }
+
+        .section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #00ff00;
+        }
+
+        .log {
+            margin: 5px 0;
+        }
+
+        .success {
+            color: #00ff00;
+        }
+
+        .error {
+            color: #ff0000;
+        }
+
+        .info {
+            color: #00aaff;
+        }
+
+        .warning {
+            color: #ffaa00;
+        }
+
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #00cc00;
+        }
+
+        input {
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            width: 100%;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 NFT OWNERSHIP CHECKER</h1>
+
+    <div class="section">
+        <h3>Configuration</h3>
+        <label>Contract Address:</label>
+        <input type="text" id="contractAddress" value="0xe31d18Fb9925f677451845997f64806a88264b3D">
+
+        <label>User Address:</label>
+        <input type="text" id="userAddress" value="0x3e4d881819768fab30c5a79F3A9A7e69f0a935a4">
+
+        <label>RPC URL:</label>
+        <input type="text" id="rpcUrl" value="https://rpc-amoy.polygon.technology">
+
+        <br><br>
+        <button onclick="checkOwnership()">🔍 Check Ownership</button>
+        <button onclick="clearLogs()">🗑️ Clear Logs</button>
+    </div>
+
+    <div class="section">
+        <h3>Results</h3>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const ABI = [
+            "function totalMinted() view returns (uint256)",
+            "function balanceOf(address owner) view returns (uint256)",
+            "function ownerOf(uint256 tokenId) view returns (address)",
+            "function tokenURI(uint256 tokenId) view returns (string)",
+            "function version(uint256 tokenId) view returns (uint256)",
+            "function name() view returns (string)",
+            "function symbol() view returns (string)"
+        ];
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function checkOwnership() {
+            clearLogs();
+
+            const contractAddress = document.getElementById('contractAddress').value;
+            const userAddress = document.getElementById('userAddress').value;
+            const rpcUrl = document.getElementById('rpcUrl').value;
+
+            log('='.repeat(60), 'info');
+            log('🔍 CHECKING NFT OWNERSHIP', 'info');
+            log('='.repeat(60), 'info');
+            log('', 'info');
+            log(`📍 Contract: ${contractAddress}`, 'info');
+            log(`👤 User: ${userAddress}`, 'info');
+            log(`🌐 RPC: ${rpcUrl}`, 'info');
+            log('', 'info');
+
+            try {
+                // Create provider
+                log('📡 Connecting to network...', 'info');
+                const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+                const network = await provider.getNetwork();
+                log(`✅ Connected to Chain ID: ${network.chainId}`, 'success');
+                log('', 'info');
+
+                // Create contract instance
+                log('📝 Creating contract instance...', 'info');
+                const contract = new ethers.Contract(contractAddress, ABI, provider);
+                log('✅ Contract instance created', 'success');
+                log('', 'info');
+
+                // Get contract info
+                log('📊 CONTRACT INFO:', 'info');
+                const name = await contract.name();
+                const symbol = await contract.symbol();
+                log(`   Name: ${name}`, 'info');
+                log(`   Symbol: ${symbol}`, 'info');
+                log('', 'info');
+
+                // Get total minted
+                log('🔢 Checking total minted...', 'info');
+                const totalMinted = await contract.totalMinted();
+                log(`✅ Total Minted: ${totalMinted.toString()}`, 'success');
+                log('', 'info');
+
+                // Get user balance
+                log('💰 Checking user balance...', 'info');
+                const balance = await contract.balanceOf(userAddress);
+                log(`✅ User Balance: ${balance.toString()} NFTs`, 'success');
+                log('', 'info');
+
+                if (balance.toNumber() === 0) {
+                    log('❌ USER HAS NO NFTs!', 'error');
+                    log('', 'info');
+                    log('Possible reasons:', 'warning');
+                    log('1. Mint transaction failed', 'warning');
+                    log('2. Mint transaction not confirmed yet', 'warning');
+                    log('3. NFT transferred to another address', 'warning');
+                    log('4. Wrong network or contract address', 'warning');
+                    return;
+                }
+
+                // Find owned tokens
+                log('🔍 Scanning for owned tokens...', 'info');
+                const ownedTokens = [];
+
+                for (let i = 0; i < totalMinted.toNumber(); i++) {
+                    try {
+                        const owner = await contract.ownerOf(i);
+                        if (owner.toLowerCase() === userAddress.toLowerCase()) {
+                            ownedTokens.push(i);
+                            log(`✅ Token #${i} owned by user`, 'success');
+
+                            // Get token details
+                            const uri = await contract.tokenURI(i);
+                            const version = await contract.version(i);
+                            log(`   URI: ${uri}`, 'info');
+                            log(`   Version: ${version.toString()}`, 'info');
+                            log('', 'info');
+                        }
+                    } catch (err) {
+                        // Token doesn't exist or error
+                        continue;
+                    }
+                }
+
+                log('='.repeat(60), 'info');
+                log('📋 SUMMARY', 'info');
+                log('='.repeat(60), 'info');
+                log(`Total Minted: ${totalMinted.toString()}`, 'info');
+                log(`User Balance: ${balance.toString()}`, 'info');
+                log(`Owned Tokens: ${ownedTokens.join(', ') || 'None'}`, ownedTokens.length > 0 ? 'success' : 'error');
+                log('='.repeat(60), 'info');
+
+                if (ownedTokens.length > 0) {
+                    log('', 'info');
+                    log('✅ NFTs FOUND! User owns NFTs.', 'success');
+                    log('', 'info');
+                    log('If NFTs not showing in app:', 'warning');
+                    log('1. Hard refresh browser (Ctrl+Shift+R)', 'warning');
+                    log('2. Check browser console for errors', 'warning');
+                    log('3. Verify wallet is connected', 'warning');
+                    log('4. Check network is Polygon Amoy', 'warning');
+                } else {
+                    log('', 'info');
+                    log('❌ NO NFTs FOUND!', 'error');
+                    log('Balance shows NFTs but none found in scan.', 'error');
+                    log('This is unusual - check contract implementation.', 'error');
+                }
+
+            } catch (error) {
+                log('', 'info');
+                log('❌ ERROR:', 'error');
+                log(error.message, 'error');
+                console.error('Full error:', error);
+            }
+        }
+
+        // Auto-run on page load
+        window.addEventListener('load', () => {
+            log('Page loaded. Click "Check Ownership" to start.', 'info');
+        });
+    </script>
+</body>
+
+</html>

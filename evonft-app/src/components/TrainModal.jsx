@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNFTExtended, useNFTStats } from '../hooks/useExtendedContract';
 import { ethers } from 'ethers';
 
-export default function TrainModal({ isOpen, onClose, tokenId, nftName }) {
+export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSuccess }) {
     const { contractWithSigner } = useNFTExtended();
     const { stats, loading } = useNFTStats(tokenId);
     const [training, setTraining] = useState(false);
@@ -65,10 +65,20 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName }) {
             });
 
             console.log('Train transaction sent:', tx.hash);
-            await tx.wait();
+            const receipt = await tx.wait();
+            console.log('Train transaction confirmed:', receipt);
 
             // Success feedback
-            alert(`Successfully trained ${selectedStat.name}! +1 ${selectedStat.name} and +100 XP gained!`);
+            alert(`Successfully trained ${selectedStat.name}! +1 ${selectedStat.name} and +100 XP gained!\n\nRefreshing NFT data...`);
+
+            // Wait a bit for blockchain to update
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Call onSuccess callback if provided
+            if (onSuccess) {
+                onSuccess();
+            }
+
             onClose();
 
         } catch (error) {
@@ -143,10 +153,10 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName }) {
                                         onClick={() => !isMaxed && setSelectedStat(stat)}
                                         disabled={isMaxed}
                                         className={`w-full p-4 rounded-xl border-2 transition-all ${selectedStat?.type === stat.type
-                                                ? 'border-primary-500 bg-primary-500/20'
-                                                : isMaxed
-                                                    ? 'border-slate-800 bg-slate-800/50 opacity-50 cursor-not-allowed'
-                                                    : 'border-slate-700 hover:border-slate-600'
+                                            ? 'border-primary-500 bg-primary-500/20'
+                                            : isMaxed
+                                                ? 'border-slate-800 bg-slate-800/50 opacity-50 cursor-not-allowed'
+                                                : 'border-slate-700 hover:border-slate-600'
                                             }`}
                                     >
                                         <div className="flex items-center gap-4">

@@ -198,64 +198,81 @@ export class ContractService {
  */
 
 /**
- * Upload metadata to IPFS (via backend)
+ * Upload metadata to IPFS
+ * Now using real IPFS via Pinata
  */
-export async function uploadMetadataToIPFS(metadata) {
-    try {
-        // In production, this should call your backend API
-        // which then uploads to Pinata/IPFS
-        const response = await fetch('/api/ipfs/upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(metadata)
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to upload to IPFS');
-        }
-
-        const { cid } = await response.json();
-        return `ipfs://${cid}`;
-    } catch (error) {
-        console.error('IPFS upload error:', error);
-
-        // Fallback: use mock IPFS URI for development
-        const mockCID = 'Qm' + Math.random().toString(36).substring(2, 15);
-        console.warn('Using mock IPFS URI:', mockCID);
-        return `ipfs://${mockCID}`;
-    }
-}
+export { uploadMetadataToIPFS } from './ipfsService';
 
 /**
  * Generate initial metadata for new NFT
  */
 export function generateInitialMetadata(tokenId) {
-    const rarities = ['common', 'uncommon', 'rare'];
-    const rarity = rarities[Math.floor(Math.random() * rarities.length)];
+    // Rarity distribution: 60% common, 30% uncommon, 10% rare
+    const rand = Math.random();
+    let rarity;
+
+    if (rand < 0.6) {
+        rarity = 'common';
+    } else if (rand < 0.9) {
+        rarity = 'uncommon';
+    } else {
+        rarity = 'rare';
+    }
+
+    // Stats start at 5 (consistent with contract)
+    // Users can increase stats through training
+    const INITIAL_STAT_VALUE = 5;
 
     const traits = ['🔥', '💧', '🌍', '💨', '⚡', '🌟'];
-    const selectedTraits = traits
-        .sort(() => Math.random() - 0.5)
-        .slice(0, Math.floor(Math.random() * 3) + 1);
+    const shuffledTraits = [...traits].sort(() => Math.random() - 0.5);
+    const selectedTraits = shuffledTraits.slice(0, Math.floor(Math.random() * 3) + 1);
 
-    return {
+    // Creature types based on rarity (lowercase to match nft-visuals.js)
+    const creatureTypes = {
+        common: ['cat', 'rabbit'],
+        uncommon: ['wolf', 'fox'],
+        rare: ['dragon', 'phoenix', 'unicorn', 'griffin']
+    };
+
+    const availableTypes = creatureTypes[rarity];
+    const creatureType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+
+    // Capitalize creature type for display
+    const creatureTypeDisplay = creatureType.charAt(0).toUpperCase() + creatureType.slice(1);
+
+    const metadata = {
         name: `EvoNFT #${tokenId}`,
-        description: 'A digital companion that grows and evolves with you.',
+        description: `A ${rarity} ${creatureTypeDisplay} that grows and evolves with you. Train to increase stats!`,
         image: `https://via.placeholder.com/512/8B5CF6/FFFFFF?text=EvoNFT+${tokenId}`,
         attributes: [
-            { trait_type: 'level', value: 1 },
-            { trait_type: 'rarity', value: rarity },
-            { trait_type: 'strength', value: 5 },
-            { trait_type: 'intelligence', value: 5 },
-            { trait_type: 'speed', value: 5 },
-            { trait_type: 'endurance', value: 5 },
-            { trait_type: 'luck', value: 5 }
+            { trait_type: 'Level', value: 1 },
+            { trait_type: 'Rarity', value: rarity },
+            { trait_type: 'Creature Type', value: creatureTypeDisplay },
+            // All stats start at 5 (consistent with smart contract)
+            { trait_type: 'Strength', value: INITIAL_STAT_VALUE },
+            { trait_type: 'Intelligence', value: INITIAL_STAT_VALUE },
+            { trait_type: 'Speed', value: INITIAL_STAT_VALUE },
+            { trait_type: 'Endurance', value: INITIAL_STAT_VALUE },
+            { trait_type: 'Luck', value: INITIAL_STAT_VALUE }
         ],
         version: 1,
         evolutionType: 'genesis',
         lastUpdated: Math.floor(Date.now() / 1000),
-        traits: selectedTraits
+        traits: selectedTraits,
+        rarity: rarity,
+        creatureType: creatureType // lowercase for SVG generation
     };
+
+    // Debug: Log generated metadata
+    console.log('🎲 Generated Metadata:', {
+        tokenId,
+        rarity,
+        creatureType: creatureTypeDisplay,
+        initialStats: INITIAL_STAT_VALUE,
+        note: 'All stats start at 5 (consistent with contract). Use Train to increase!'
+    });
+
+    return metadata;
 }
 
 /**

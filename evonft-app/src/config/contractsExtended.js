@@ -35,6 +35,14 @@ export const CURRENT_NETWORK = NETWORKS.AMOY;
 export const NFT_CONTRACT = import.meta.env.VITE_NFT_CONTRACT || '';
 export const STAKING_CONTRACT = import.meta.env.VITE_STAKING_CONTRACT || '';
 export const BREEDING_CONTRACT = import.meta.env.VITE_BREEDING_CONTRACT || '';
+export const MARKETPLACE_CONTRACT = import.meta.env.VITE_MARKETPLACE_CONTRACT || '';
+
+// Debug: Log contract addresses
+console.log('🔍 Extended Contracts Config:');
+console.log('  NFT_CONTRACT:', NFT_CONTRACT);
+console.log('  STAKING_CONTRACT:', STAKING_CONTRACT);
+console.log('  BREEDING_CONTRACT:', BREEDING_CONTRACT);
+console.log('  MARKETPLACE_CONTRACT:', MARKETPLACE_CONTRACT);
 
 // Legacy support
 export const CONTRACT_ADDRESS = NFT_CONTRACT;
@@ -95,17 +103,31 @@ export const STAKING_ABI = [
 
 // Breeding Contract ABI
 export const BREEDING_ABI = [
-    "function breed(uint256 parent1, uint256 parent2, string calldata offspringURI) payable returns (uint256)",
-    "function completeBreeding(uint256 breedingId, string calldata offspringURI) external",
-    "function isBreedingReady(uint256 breedingId) view returns (bool)",
-    "function getTimeRemaining(uint256 breedingId) view returns (uint256)",
-    "function getBreedingInfo(uint256 breedingId) view returns (uint256, uint256, address, uint256, bool, uint256, uint256)",
+    "function breed(uint256 parent1Id, uint256 parent2Id) payable returns (uint256)",
     "function canBreed(uint256 tokenId) view returns (bool)",
-    "function getBreedCount(uint256 tokenId) view returns (uint256)",
-    "function getCompatibility(uint256 parent1, uint256 parent2) view returns (uint256)",
+    "function getTimeUntilBreedable(uint256 tokenId) view returns (uint256)",
+    "function getBreedingInfo(uint256 tokenId) view returns (uint256 breedCount, uint256 lastBreedTime, uint256 generation, bool canBreedNow, uint256 timeUntilBreedable)",
+    "function predictOffspringStats(uint256 parent1Id, uint256 parent2Id) view returns (uint256 strength, uint256 speed, uint256 intelligence, uint256 defense, uint256 luck, uint256 generation)",
     "function breedingFee() view returns (uint256)",
-    "event BreedingStarted(uint256 indexed breedingId, address indexed owner, uint256 parent1, uint256 parent2, uint256 startTime)",
-    "event BreedingCompleted(uint256 indexed breedingId, uint256 indexed offspringId, uint256 parent1, uint256 parent2)"
+    "function breedingCooldown() view returns (uint256)",
+    "function maxBreedCount() view returns (uint256)",
+    "event Bred(uint256 indexed parent1Id, uint256 indexed parent2Id, uint256 indexed offspringId, address breeder, uint256 timestamp)"
+];
+
+// Marketplace Contract ABI
+export const MARKETPLACE_ABI = [
+    "function listForSale(uint256 tokenId, uint256 price) external",
+    "function buyNFT(uint256 tokenId) external payable",
+    "function cancelListing(uint256 tokenId) external",
+    "function updatePrice(uint256 tokenId, uint256 newPrice) external",
+    "function getListing(uint256 tokenId) view returns (address seller, uint256 price, uint256 listedAt, bool active)",
+    "function isListed(uint256 tokenId) view returns (bool)",
+    "function getMarketplaceStats() view returns (uint256 totalListings, uint256 totalSales, uint256 totalVolume, uint256 marketplaceFee)",
+    "function marketplaceFee() view returns (uint256)",
+    "event Listed(uint256 indexed tokenId, address indexed seller, uint256 price, uint256 timestamp)",
+    "event Sold(uint256 indexed tokenId, address indexed buyer, address indexed seller, uint256 price, uint256 timestamp)",
+    "event Cancelled(uint256 indexed tokenId, address indexed seller, uint256 timestamp)",
+    "event PriceUpdated(uint256 indexed tokenId, uint256 oldPrice, uint256 newPrice, uint256 timestamp)"
 ];
 
 // Constants

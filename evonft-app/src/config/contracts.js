@@ -33,7 +33,12 @@ export const NETWORKS = {
 export const CURRENT_NETWORK = NETWORKS.AMOY;
 
 // Contract Address (update after deployment)
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '';
+export const CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT || import.meta.env.VITE_CONTRACT_ADDRESS || '0xe31d18Fb9925f677451845997f64806a88264b3D';
+
+// Debug: Log contract address
+console.log('🔍 Contract Address:', CONTRACT_ADDRESS);
+console.log('🔍 VITE_NFT_CONTRACT:', import.meta.env.VITE_NFT_CONTRACT);
+console.log('🔍 All env vars:', import.meta.env);
 
 // Contract ABI (minimal for frontend)
 export const CONTRACT_ABI = [
@@ -43,19 +48,33 @@ export const CONTRACT_ABI = [
     "function totalMinted() view returns (uint256)",
     "function maxSupply() view returns (uint256)",
     "function mintPrice() view returns (uint256)",
+    "function cooldown() view returns (uint256)",
     "function tokenURI(uint256 tokenId) view returns (string)",
     "function ownerOf(uint256 tokenId) view returns (address)",
     "function balanceOf(address owner) view returns (uint256)",
     "function getEvolutionInfo(uint256 tokenId) view returns (uint256, uint256, uint256, uint256)",
     "function canEvolve(uint256 tokenId) view returns (bool)",
     "function version(uint256 tokenId) view returns (uint256)",
+    "function tokenXP(uint256 tokenId) view returns (uint256)",
+    "function getTokenStats(uint256 tokenId) view returns (uint8[5])",
+    "function getTokenProgress(uint256 tokenId) view returns (uint256, uint256, uint256, uint256)",
+
+    // ERC-721 Approval functions (for marketplace)
+    "function approve(address to, uint256 tokenId)",
+    "function getApproved(uint256 tokenId) view returns (address)",
+    "function setApprovalForAll(address operator, bool approved)",
+    "function isApprovedForAll(address owner, address operator) view returns (bool)",
 
     // Write functions
     "function mint(address to, string memory uri) payable returns (uint256)",
+    "function feed(uint256 tokenId, uint8 foodType) payable",
+    "function train(uint256 tokenId, uint8 statType) payable",
 
     // Events
     "event Minted(address indexed to, uint256 indexed tokenId, string uri)",
-    "event Evolved(uint256 indexed tokenId, string oldURI, string newURI, uint256 version, uint256 timestamp)"
+    "event Evolved(uint256 indexed tokenId, string oldURI, string newURI, uint256 version, uint256 timestamp)",
+    "event Fed(uint256 indexed tokenId, uint8 foodType, uint256 xpGained, uint256 totalXP)",
+    "event Trained(uint256 indexed tokenId, uint8 statType, uint8 newValue, uint256 xpGained)"
 ];
 
 // Helper function to add network to MetaMask

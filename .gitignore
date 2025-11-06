@@ -62,3 +62,18 @@ deployments/*.json
 tmp/
 temp/
 *.tmp
+
+# Test files
+test-*.js
+*-test.js
+*.test.js
+
+# Documentation files (except README.md)
+*.md
+!README.md
+!evonft-app/README.md
+!evonft-contracts/README.md
+
+# Shell scripts (test/utility scripts)
+quick-fix.sh
+test-*.sh

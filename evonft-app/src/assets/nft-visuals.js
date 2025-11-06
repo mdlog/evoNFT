@@ -167,10 +167,6 @@ export function generateNFTVisual(nftData) {
             <text x="${centerX}" y="${centerY + 10}" text-anchor="middle" 
                   font-size="${size / 4}" opacity="0.9">${creature.emoji}</text>
             
-            <!-- Level indicator -->
-            <circle cx="${size - 25}" cy="25" r="15" fill="${rarityData.color}" stroke="white" stroke-width="2"/>
-            <text x="${size - 25}" y="30" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${level}</text>
-            
             <!-- Sparkle effects for higher levels -->
             ${evolution.effects.includes('sparkle') ? `
                 <use href="#sparkle-${tokenId}" x="${centerX - 40}" y="${centerY - 40}"/>
@@ -187,10 +183,6 @@ export function generateNFTVisual(nftData) {
                     <animate attributeName="opacity" values="0.3;0.1;0.3" dur="3s" repeatCount="indefinite"/>
                 </circle>
             ` : ''}
-            
-            <!-- Rarity indicator -->
-            <rect x="5" y="5" width="60" height="20" rx="10" fill="${rarityData.color}" opacity="0.8"/>
-            <text x="35" y="18" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${rarityData.name.toUpperCase()}</text>
         </svg>
     `
 }

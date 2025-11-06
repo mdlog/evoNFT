@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNFTExtended } from '../hooks/useExtendedContract';
 import { ethers } from 'ethers';
 
-export default function FeedModal({ isOpen, onClose, tokenId, nftName }) {
+export default function FeedModal({ isOpen, onClose, tokenId, nftName, onSuccess }) {
     const { contractWithSigner } = useNFTExtended();
     const [feeding, setFeeding] = useState(false);
     const [selectedFood, setSelectedFood] = useState(null);
@@ -49,10 +49,20 @@ export default function FeedModal({ isOpen, onClose, tokenId, nftName }) {
             });
 
             console.log('Feed transaction sent:', tx.hash);
-            await tx.wait();
+            const receipt = await tx.wait();
+            console.log('Feed transaction confirmed:', receipt);
 
             // Success feedback
-            alert(`Successfully fed ${nftName} with ${selectedFood.name}! +${selectedFood.xp} XP gained!`);
+            alert(`Successfully fed ${nftName} with ${selectedFood.name}! +${selectedFood.xp} XP gained!\n\nRefreshing NFT data...`);
+
+            // Wait a bit for blockchain to update
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Call onSuccess callback if provided
+            if (onSuccess) {
+                onSuccess();
+            }
+
             onClose();
 
         } catch (error) {
@@ -112,8 +122,8 @@ export default function FeedModal({ isOpen, onClose, tokenId, nftName }) {
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => setSelectedFood(food)}
                                 className={`w-full p-4 rounded-xl border-2 transition-all ${selectedFood?.type === food.type
-                                        ? 'border-primary-500 bg-primary-500/20'
-                                        : 'border-slate-700 hover:border-slate-600'
+                                    ? 'border-primary-500 bg-primary-500/20'
+                                    : 'border-slate-700 hover:border-slate-600'
                                     }`}
                             >
                                 <div className="flex items-center gap-4">

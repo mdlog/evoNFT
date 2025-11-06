@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import NFTCard from '../components/NFTCard'
 import { motion } from 'framer-motion'
 import { useMyNFTs } from '../hooks/useContract'
-import { useWeb3 } from '../context/Web3Context'
+import { useWeb3 } from '../context/RainbowWeb3Context'
 import { useNFTVisuals } from '../hooks/useNFTVisuals'
 
 export default function MyCollectionSimple() {
@@ -84,8 +84,8 @@ export default function MyCollectionSimple() {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-4 py-2 font-medium transition ${activeTab === tab
-                                    ? 'text-primary-400 border-b-2 border-primary-400'
-                                    : 'text-slate-400 hover:text-slate-200'
+                                ? 'text-primary-400 border-b-2 border-primary-400'
+                                : 'text-slate-400 hover:text-slate-200'
                                 }`}
                         >
                             {tab.charAt(0).toUpperCase() + tab.slice(1)} NFTs
