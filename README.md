@@ -20,6 +20,56 @@
 - 🛒 **Marketplace** - Buy and sell NFTs peer-to-peer
 - 🌈 **Multi-Wallet** - RainbowKit integration (MetaMask, WalletConnect, Coinbase, etc.)
 
+## 🎯 NFT System
+
+### Level Progression
+Your EvoNFT grows stronger as you interact with it:
+
+| Level | XP Required | Unlock |
+|-------|-------------|--------|
+| 1 | 0 XP | Starting level |
+| 2 | 100 XP | Basic training unlocked |
+| 3 | 250 XP | Breeding available |
+| 4 | 500 XP | Advanced stats boost |
+| 5 | 1000 XP | Elite status |
+| 6+ | +500 XP per level | Master tier |
+
+**Gain XP by:**
+- 🍖 **Feeding** - +10 XP, increases Health
+- 💪 **Training** - +20 XP, increases Strength
+- 🧬 **Breeding** - +50 XP (both parents)
+- 💎 **Staking** - +5 XP per day
+
+### Rarity Tiers
+NFTs are categorized by their base stats and potential:
+
+| Rarity | Base Stats Range | Breeding Bonus | Market Value |
+|--------|------------------|----------------|--------------|
+| ⚪ **Common** | 10-20 | Standard | 💰 |
+| 🟢 **Uncommon** | 21-35 | +5% stats | 💰💰 |
+| 🔵 **Rare** | 36-50 | +10% stats | 💰💰💰 |
+| 🟣 **Epic** | 51-70 | +15% stats | 💰💰💰💰 |
+| 🟠 **Legendary** | 71-90 | +25% stats | 💰💰💰💰💰 |
+| 🔴 **Mythic** | 91-100 | +50% stats | 💰💰💰💰💰💰 |
+
+**Rarity affects:**
+- Initial stat distribution (Health, Strength, Intelligence)
+- Breeding offspring quality
+- Staking reward multiplier
+- Marketplace demand
+
+### Stats Explained
+Each NFT has 3 core attributes:
+
+- ❤️ **Health** - Determines survival in future PvP, increased by feeding
+- ⚔️ **Strength** - Combat power, increased by training
+- 🧠 **Intelligence** - Breeding success rate, naturally grows with level
+
+**Stat Growth:**
+- Feed: +5 Health, +10 XP (Cost: 0.001 MATIC)
+- Train: +5 Strength, +20 XP (Cost: 0.002 MATIC)
+- Level Up: +2 to all stats automatically
+
 ## 🚀 Quick Start
 
 ### Prerequisites
