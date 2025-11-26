@@ -36,9 +36,9 @@ Your EvoNFT grows stronger as you interact with it:
 | 6+ | +500 XP per level | Master tier |
 
 **Gain XP by:**
-- 🍖 **Feeding** - +10 XP, increases Health
-- 💪 **Training** - +20 XP, increases Strength
-- 🧬 **Breeding** - +50 XP (both parents)
+- 🍖 **Feeding** - +10 to +500 XP (depending on food type: Basic/Premium/Legendary)
+- 💪 **Training** - +100 XP per training session (also increases selected stat by 1)
+- 🧬 **Breeding** - +50 XP for both parent NFTs
 
 **Note:** Staking earns MATIC rewards, not XP. To gain XP, use Feed/Train/Breed actions.
 
@@ -61,18 +61,31 @@ NFTs are categorized by their base stats and potential:
 - Marketplace demand
 
 ### Stats Explained
-Each NFT has 3 core attributes:
+Each NFT has 5 trainable attributes:
 
-- ❤️ **Health** - Determines survival in future PvP, increased by feeding
-- ⚔️ **Strength** - Combat power, increased by training
-- 🧠 **Intelligence** - Breeding success rate, naturally grows with level
+- 💪 **Strength** - Physical power and combat ability
+- 🧠 **Intelligence** - Learning speed and problem solving
+- ⚡ **Speed** - Agility and reaction time
+- 🛡️ **Endurance** - Stamina and durability
+- 🍀 **Luck** - Fortune and rare event chances
+
+All stats start at 5 and can be trained up to 100 (max)
 
 **Stat Growth:**
-- Feed: +5 Health, +10 XP (Cost: 0.001 MATIC)
-- Train: +5 Strength, +20 XP (Cost: 0.002 MATIC)
+- Feed: +10 XP (Cost: 0.1-1.0 MATIC depending on food type)
+- Train: +1 to selected stat, +100 XP (Cost: 0.3 MATIC)
 - Breed: +50 XP for both parents (Cost: 0.01 MATIC, 24h cooldown)
 - Stake: Earn MATIC rewards (no XP)
-- Level Up: +2 to all stats automatically
+- Level Up: Automatic when XP threshold reached
+
+**5 Trainable Stats:**
+- 💪 **Strength** - Physical power
+- 🧠 **Intelligence** - Learning ability  
+- ⚡ **Speed** - Agility and reaction
+- 🛡️ **Endurance** - Stamina and durability
+- 🍀 **Luck** - Fortune and rare events
+
+Each stat can be trained up to 100 (max)
 
 ## 🧬 Evolution System
 
@@ -142,8 +155,21 @@ Stake your NFTs to earn XP and MATIC rewards automatically!
 
 ### Prerequisites
 - Node.js 18+
+- npm or yarn
 - Wallet (MetaMask recommended)
 - Polygon Amoy testnet MATIC ([Get from faucet](https://faucet.polygon.technology))
+
+### Installation
+
+```bash
+# Clone repository
+git clone https://github.com/mdlog/evoNFT.git
+cd evoNFT
+
+# Install dependencies for frontend
+cd evonft-app
+npm install
+
 # Setup environment
 cp .env.example .env
 # Edit .env and add your VITE_WALLETCONNECT_PROJECT_ID
@@ -175,14 +201,15 @@ VITE_WALLETCONNECT_PROJECT_ID=your_project_id_here
 
 ## 🎮 How to Use
 
-1. **Connect Wallet** - Click "Connect Wallet" and choose your wallet
-2. **Get Test MATIC** - Visit [Polygon Faucet](https://faucet.polygon.technology)
+1. **Connect Wallet** - Click "Connect Wallet" and choose your wallet (MetaMask, WalletConnect, Coinbase)
+2. **Get Test MATIC** - Visit [Polygon Faucet](https://faucet.polygon.technology) for Amoy testnet
 3. **Mint NFT** - Go to Mint page and create your first NFT (0.01 MATIC)
-4. **Level Up** - Feed (0.001 MATIC) or train (0.002 MATIC) to increase stats
-5. **Stake NFT** - Earn passive rewards: 50-100 XP/day + 0.01-0.02 MATIC/day
+4. **Train Your NFT** - Select a stat to train (0.3 MATIC) → +1 stat, +100 XP
+5. **Feed Your NFT** - Choose food type (0.1-1.0 MATIC) → +10-500 XP
 6. **Breed NFTs** - Combine 2 NFTs to create offspring (0.01 MATIC, 24h cooldown)
-7. **Evolution** - Wait 24h cooldown, then evolve to change appearance (AI-driven)
-8. **Trade** - List your NFT for sale or buy from marketplace
+7. **Stake NFT** - Earn passive rewards: 50-100 XP/day + 0.01-0.02 MATIC/day
+8. **Evolution** - Wait 24h cooldown, then evolve to change appearance (AI-driven, free)
+9. **Trade** - List your NFT for sale or buy from marketplace (2.5% fee)
 
 ## 🛠️ Tech Stack
 
@@ -288,6 +315,13 @@ All contracts are deployed on **Polygon Amoy Testnet**:
 - Ensure you have 0.01 MATIC for breeding cost
 - Parents must not be staked or listed for sale
 
+**Training failed?**
+- Ensure you own the NFT
+- Check if stat is already at max (100)
+- Verify you have at least 0.35 MATIC (0.3 + gas)
+- NFT must not be staked or listed for sale
+- Check browser console for detailed error messages
+
 ## 🎯 Advanced Features
 
 ### Real-Time Data
@@ -324,7 +358,8 @@ All contracts are deployed on **Polygon Amoy Testnet**:
 - Mint Fee: 0.01 MATIC per NFT
 - Marketplace Fee: 2.5% of sales
 - Breeding Fee: 0.01 MATIC per breed
-- Feed/Train: 0.001-0.002 MATIC
+- Feed: 0.1-1.0 MATIC (Basic/Premium/Legendary)
+- Train: 0.3 MATIC per training session
 
 ### Reward Distribution
 - Staking rewards funded by platform revenue
@@ -351,8 +386,8 @@ Built with:
 | Action | Cost | Cooldown | Rewards |
 |--------|------|----------|---------|
 | Mint NFT | 0.01 MATIC | None | New NFT |
-| Feed | 0.001 MATIC | None | +5 Health, +10 XP |
-| Train | 0.002 MATIC | None | +5 Strength, +20 XP |
+| Feed | 0.1-1.0 MATIC | None | +10-500 XP (food type) |
+| Train | 0.3 MATIC | None | +1 stat, +100 XP |
 | Breed | 0.01 MATIC | 24 hours | New NFT, +50 XP (parents) |
 | Stake | Free | None | 50-100 XP/day + MATIC |
 | Evolve | Free | 24 hours | New appearance, version++ |
@@ -395,7 +430,7 @@ Built with:
   
   **Status**: ✅ Production Ready | **Network**: Polygon Amoy Testnet
   
-  **Live dApp**: https://evonft.xyz
+  **GitHub**: [mdlog/evoNFT](https://github.com/mdlog/evoNFT)
   
   Made with ❤️ for the Web3 community
   
