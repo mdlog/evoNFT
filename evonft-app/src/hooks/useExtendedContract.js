@@ -115,8 +115,10 @@ export function useBreeding() {
 
 /**
  * Hook untuk NFT Stats & Progress
+ * @param {number} tokenId - Token ID
+ * @param {number} refreshKey - Optional refresh trigger
  */
-export function useNFTStats(tokenId) {
+export function useNFTStats(tokenId, refreshKey = 0) {
     const { contract } = useNFTExtended();
     const [stats, setStats] = useState(null);
     const [progress, setProgress] = useState(null);
@@ -130,7 +132,7 @@ export function useNFTStats(tokenId) {
 
         async function loadStats() {
             try {
-                console.log(`📊 Loading stats for NFT #${tokenId}...`);
+                console.log(`📊 Loading stats for NFT #${tokenId}... (refresh: ${refreshKey})`);
 
                 // Try to load stats and progress
                 try {
@@ -211,7 +213,7 @@ export function useNFTStats(tokenId) {
         }
 
         loadStats();
-    }, [contract, tokenId]);
+    }, [contract, tokenId, refreshKey]);
 
     return { stats, progress, loading };
 }

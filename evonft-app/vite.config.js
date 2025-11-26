@@ -4,8 +4,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
     plugins: [react()],
     server: {
+        host: true,
         port: 3020,
         open: true,
-        strictPort: true // Gagal jika port 3020 sudah digunakan
+        strictPort: true,
+        allowedHosts: [
+            'evonft.xyz',
+            'www.evonft.xyz',
+            '.evonft.xyz'
+        ]
     }
 })

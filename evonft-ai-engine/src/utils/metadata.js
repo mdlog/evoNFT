@@ -20,7 +20,7 @@ export async function generateEvolutionMetadata({
         const newMetadata = {
             name: currentMetadata.name || `EvoNFT #${tokenId}`,
             description: await generateDescription(currentMetadata, evolutionType, signals),
-            image: await generateImageURI(tokenId, evolutionType, newVersion),
+            image: await generateImageURI(tokenId, evolutionType, newVersion, currentMetadata),
             attributes: await generateAttributes(currentMetadata, evolutionType, signals),
             version: newVersion,
             evolutionType: evolutionType,
@@ -74,28 +74,27 @@ Make it mystical and exciting, focusing on growth and transformation.`;
 }
 
 /**
- * Generate image URI (placeholder or AI-generated)
+ * Generate image URI (AI-generated or placeholder)
  */
-async function generateImageURI(tokenId, evolutionType, version) {
-    // For MVP, use placeholder images
-    // In production, integrate with Stable Diffusion / DALL-E / Midjourney
+async function generateImageURI(tokenId, evolutionType, version, metadata) {
+    try {
+        // Try to use AI image generation
+        const { generateEvolutionImage } = await import('./imageGenerator.js');
+        return await generateEvolutionImage(tokenId, evolutionType, version, metadata);
+    } catch (error) {
+        logger.error('Error generating AI image, using placeholder:', error);
 
-    const colorMap = {
-        common: '94A3B8',
-        rare: '3B82F6',
-        epic: 'A855F7',
-        legendary: 'F59E0B'
-    };
+        // Fallback to placeholder
+        const colorMap = {
+            common: '94A3B8',
+            rare: '3B82F6',
+            epic: 'A855F7',
+            legendary: 'F59E0B'
+        };
 
-    const color = colorMap[evolutionType] || '8B5CF6';
-
-    // Placeholder image URL
-    return `https://via.placeholder.com/512/${color}/FFFFFF?text=EvoNFT+${tokenId}+v${version}`;
-
-    // TODO: Implement actual image generation
-    // const imagePrompt = `A mystical ${evolutionType} creature, digital art, vibrant colors`;
-    // const generatedImage = await generateWithStableDiffusion(imagePrompt);
-    // return await uploadImageToIPFS(generatedImage);
+        const color = colorMap[evolutionType] || '8B5CF6';
+        return `https://via.placeholder.com/512/${color}/FFFFFF?text=EvoNFT+${tokenId}+v${version}`;
+    }
 }
 
 /**

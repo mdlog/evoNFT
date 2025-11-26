@@ -264,11 +264,14 @@ export function useEvolutionPreview(nft, targetLevel) {
 
 // Hook untuk generate mock NFTs untuk testing
 export function useMockNFTs(count = 10) {
-    const mockNFTs = useMemo(() => {
-        return Array.from({ length: count }, (_, i) => {
+    const [mockNFTs, setMockNFTs] = useState([])
+
+    useEffect(() => {
+        const nfts = Array.from({ length: count }, (_, i) => {
             const tokenId = i + 1
             return generateNFTMetadata(tokenId)
         })
+        setMockNFTs(nfts)
     }, [count])
 
     return mockNFTs

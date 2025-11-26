@@ -5,10 +5,12 @@ import { useMyNFTs } from '../hooks/useContract'
 import { useWeb3 } from '../context/RainbowWeb3Context'
 import { useNFTVisuals } from '../hooks/useNFTVisuals'
 import { useNFTStats } from '../hooks/useExtendedContract'
+import { useMyListings } from '../hooks/useMyListings'
 import { NFTGallery } from '../components/NFTGallery'
 import NFTCard from '../components/NFTCard'
 import NetworkSwitcher from '../components/NetworkSwitcher'
 import { NFTVisual } from '../components/NFTVisual'
+import ListingBadge from '../components/ListingBadge'
 import { rarityLevels } from '../assets/nft-visuals'
 
 // NFT Card with Stats Component
@@ -78,6 +80,11 @@ function NFTCardWithStats({ nft }) {
                         >
                             {rarityData.name}
                         </div>
+                    </div>
+
+                    {/* For Sale Badge */}
+                    <div className="absolute bottom-3 right-3">
+                        <ListingBadge tokenId={nft.id} variant="compact" />
                     </div>
 
                     {/* Hover View Details */}
@@ -222,6 +229,9 @@ export default function MyCollection() {
     // Use visualNFTs if available, otherwise use empty array
     const displayNFTs = visualNFTs && visualNFTs.length > 0 ? visualNFTs : []
 
+    // Get listings data
+    const { listedCount, isListed } = useMyListings(displayNFTs)
+
     // Debug logging
     useEffect(() => {
         console.log('MyCollection Debug:', {
@@ -253,17 +263,31 @@ export default function MyCollection() {
             icon: '⚡'
         },
         {
-            value: (displayNFTs.length * 0.5).toFixed(1),
-            label: 'Est Value (MATIC)',
+            value: listedCount || 0,
+            label: 'For Sale',
             icon: '💰'
         }
     ]
 
+    // Get listing data for all NFTs
+    const [listingsData, setListingsData] = useState({})
+
+    useEffect(() => {
+        // Fetch listing status for all NFTs
+        const fetchListings = async () => {
+            if (!displayNFTs || displayNFTs.length === 0) return
+
+            const { useMarketplace } = await import('../hooks/useMarketplace')
+            // This will be handled by individual ListingBadge components
+        }
+        fetchListings()
+    }, [displayNFTs])
+
     // Filter NFTs based on active tab
-    const filteredNFTs = displayNFTs.filter(() => {
-        // For now, show all NFTs
-        // TODO: Add filtering logic for staked, listed, breeding when implemented
-        return activeTab === 'all'
+    const filteredNFTs = displayNFTs.filter((nft) => {
+        if (activeTab === 'all') return true
+        if (activeTab === 'listed') return isListed(nft.id)
+        return true
     })
 
     // Check if we're still loading

@@ -1,5 +1,6 @@
 import { create } from 'ipfs-http-client';
 import { logger } from './logger.js';
+import { uploadJSONToPinata } from './pinataUpload.js';
 
 // Initialize IPFS client (using Infura or local node)
 const ipfsClient = process.env.IPFS_API_URL
@@ -7,13 +8,18 @@ const ipfsClient = process.env.IPFS_API_URL
     : null;
 
 /**
- * Upload JSON metadata to IPFS
+ * Upload JSON metadata to IPFS (via Pinata)
  */
 export async function uploadToIPFS(metadata) {
     try {
+        // Try Pinata first
+        if (process.env.PINATA_API_KEY && process.env.PINATA_SECRET_KEY) {
+            return await uploadJSONToPinata(metadata);
+        }
+
+        // Fallback to IPFS client
         if (!ipfsClient) {
             logger.warn('IPFS client not configured, using mock URI');
-            // For development, return mock IPFS URI
             const mockCID = 'Qm' + Math.random().toString(36).substring(2, 15);
             return `ipfs://${mockCID}`;
         }
@@ -36,9 +42,16 @@ export async function uploadToIPFS(metadata) {
  */
 export async function uploadImageToIPFS(imageBuffer) {
     try {
+        // Try Pinata first
+        if (process.env.PINATA_API_KEY && process.env.PINATA_SECRET_KEY) {
+            return await uploadImageToPinata(imageBuffer);
+        }
+
+        // Fallback to IPFS client
         if (!ipfsClient) {
-            logger.warn('IPFS client not configured');
-            return null;
+            logger.warn('IPFS client not configured, using mock URI');
+            const mockCID = 'Qm' + Math.random().toString(36).substring(2, 15);
+            return `ipfs://${mockCID}`;
         }
 
         const { cid } = await ipfsClient.add(imageBuffer);
@@ -48,6 +61,43 @@ export async function uploadImageToIPFS(imageBuffer) {
         return uri;
     } catch (error) {
         logger.error('Error uploading image to IPFS:', error);
+        throw error;
+    }
+}
+
+/**
+ * Upload image to Pinata
+ */
+async function uploadImageToPinata(imageBuffer) {
+    const PINATA_API_KEY = process.env.PINATA_API_KEY;
+    const PINATA_SECRET_KEY = process.env.PINATA_SECRET_KEY;
+
+    try {
+        const FormData = (await import('form-data')).default;
+        const form = new FormData();
+
+        form.append('file', imageBuffer, {
+            filename: `evonft-${Date.now()}.png`,
+            contentType: 'image/png'
+        });
+
+        const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+            method: 'POST',
+            headers: {
+                'pinata_api_key': PINATA_API_KEY,
+                'pinata_secret_api_key': PINATA_SECRET_KEY,
+                ...form.getHeaders()
+            },
+            body: form
+        });
+
+        const data = await response.json();
+        const uri = `ipfs://${data.IpfsHash}`;
+
+        logger.info(`Image uploaded to Pinata: ${uri}`);
+        return uri;
+    } catch (error) {
+        logger.error('Error uploading image to Pinata:', error);
         throw error;
     }
 }

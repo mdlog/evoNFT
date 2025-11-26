@@ -26,24 +26,27 @@ function BuyNFTModalWithListing({ isOpen, onClose, nft, onSuccess }) {
 function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect }) {
     const visualData = useNFTVisual(nft)
     const displayNFT = visualData || nft
-    const isListed = listedTokenIds.has(nft.id)
 
     // Get listing data from activeListings array (already loaded)
-    const listing = listings.find(l => l.tokenId === nft.id)
+    const nftIdNum = Number(nft.id)
+    const listing = listings.find(l => {
+        const listingIdNum = Number(l.tokenId)
+        return listingIdNum === nftIdNum
+    })
 
-    // Debug logging
-    if (nft.id === 2) {
-        console.log(`🎴 NFT Card #${nft.id} (DETAILED):`, {
-            nftId: nft.id,
-            nftIdType: typeof nft.id,
-            isListed,
-            hasListing: !!listing,
-            listingPrice: listing?.price,
-            listingData: listing,
-            availableListings: listings,
-            listedTokenIdsArray: Array.from(listedTokenIds)
-        });
-    }
+    // Check if listed - use listing existence as source of truth
+    const isListed = !!listing && listing.active !== false
+
+    // Debug logging for all NFTs
+    console.log(`🎴 NFT Card #${nft.id}:`, {
+        nftId: nft.id,
+        nftIdNum,
+        isListed,
+        hasListing: !!listing,
+        listingPrice: listing?.price,
+        listingActive: listing?.active,
+        allListingIds: listings.map(l => Number(l.tokenId))
+    })
 
     // Get owner address
     const ownerAddress = displayNFT.owner || nft.owner
@@ -158,34 +161,33 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect }) {
                             </div>
                         )}
 
-                        {isListed && listing && (
-                            <div className="pt-2">
-                                <button
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        onSelect();
-                                    }}
-                                    className="w-full px-4 py-3 bg-gradient-to-r from-secondary-500 to-accent-500 hover:from-secondary-600 hover:to-accent-600 rounded-lg font-bold shadow-lg transition-all hover:scale-105 flex items-center justify-between group"
-                                >
-                                    <span className="flex items-center gap-2">
+                        {/* Listing Status */}
+                        <div className="pt-2 border-t border-slate-700/50">
+                            {isListed && listing ? (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-400">Price:</span>
+                                        <span className="text-lg font-bold text-primary-400">
+                                            {listing.price} MATIC
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            onSelect();
+                                        }}
+                                        className="w-full px-4 py-2.5 bg-gradient-to-r from-secondary-500 to-accent-500 hover:from-secondary-600 hover:to-accent-600 rounded-lg font-bold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
+                                    >
                                         <span className="text-lg">🛒</span>
                                         <span>Buy Now</span>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <span className="text-xl">{listing.price}</span>
-                                        <span className="text-sm opacity-90">MATIC</span>
-                                    </span>
-                                </button>
-                            </div>
-                        )}
-
-                        {!isListed && (
-                            <div className="pt-2 border-t border-slate-700/50">
+                                    </button>
+                                </div>
+                            ) : (
                                 <div className="text-center text-sm text-slate-500 py-2">
                                     Not for sale
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             </Link>

@@ -1,0 +1,11 @@
+{
+  "network": "amoy",
+  "breedingContract": "0x5CcE235E35c7D6bcD0aaca9744e60a0D72cF6250",
+  "nftContract": "0xe31d18Fb9925f677451845997f64806a88264b3D",
+  "deployer": "0x3e4d881819768fab30c5a79F3A9A7e69f0a935a4",
+  "timestamp": "2025-11-05T15:54:57.374Z",
+  "breedingFee": "0.01",
+  "cooldown": 86400,
+  "maxBreedCount": 3,
+  "blockNumber": 28650149
+}

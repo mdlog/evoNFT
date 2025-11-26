@@ -118,54 +118,54 @@ export function useListings() {
                 console.log('📋 Loading all listings...');
                 console.log('   Contract address:', contract.target || contract.address);
 
+                // Strategy: Get all active listings by checking contract state
+                // This is more reliable than relying on events
+                const activeListings = [];
+
+                // Query events and check each one
+                console.log('   Using event-based approach to find listings...');
+
                 // Get current block
                 const currentBlock = await contract.runner.provider.getBlockNumber();
                 console.log('   Current block:', currentBlock);
 
-                // Query last 10000 blocks (about 1 week on Polygon)
-                // This prevents timeout on large block ranges
-                const fromBlock = Math.max(0, currentBlock - 10000);
+                // Try to query from deployment block or last 50000 blocks
+                const fromBlock = Math.max(0, currentBlock - 50000);
                 console.log('   Querying from block:', fromBlock, 'to', currentBlock);
 
-                // Get Listed events with limited block range
+                // Get Listed events
                 const filter = contract.filters.Listed();
                 const events = await contract.queryFilter(filter, fromBlock, currentBlock);
                 console.log(`   ✅ Found ${events.length} listing events`);
 
-                if (events.length === 0) {
-                    console.warn('   ⚠️ No listing events found in recent blocks.');
-                    console.warn('   💡 Tip: If NFT was listed long ago, increase block range.');
-                    setListings([]);
-                    setLoading(false);
-                    return;
-                }
+                // Get unique token IDs from events
+                const tokenIds = [...new Set(events.map(e => Number(e.args.tokenId)))];
+                console.log(`   Checking ${tokenIds.length} unique tokens...`);
 
                 // Check which listings are still active
-                const activeListings = [];
+                for (const tokenId of tokenIds) {
+                    try {
+                        const isListed = await contract.isListed(tokenId);
 
-                for (const event of events) {
-                    const tokenId = Number(event.args.tokenId);
-                    console.log(`   Checking tokenId ${tokenId}...`);
-
-                    const isListed = await contract.isListed(tokenId);
-                    console.log(`   - isListed: ${isListed}`);
-
-                    if (isListed) {
-                        const listingData = await contract.getListing(tokenId);
-                        const listing = {
-                            tokenId,
-                            seller: listingData[0],
-                            price: ethers.formatEther(listingData[1]),
-                            priceWei: listingData[1],
-                            listedAt: Number(listingData[2]),
-                            active: listingData[3]
-                        };
-                        console.log(`   - Listing data:`, listing);
-                        activeListings.push(listing);
+                        if (isListed) {
+                            const listingData = await contract.getListing(tokenId);
+                            const listing = {
+                                tokenId,
+                                seller: listingData[0],
+                                price: ethers.formatEther(listingData[1]),
+                                priceWei: listingData[1],
+                                listedAt: Number(listingData[2]),
+                                active: listingData[3]
+                            };
+                            activeListings.push(listing);
+                            console.log(`   ✅ Token ${tokenId} is listed:`, listing.price, 'MATIC');
+                        }
+                    } catch (err) {
+                        console.warn(`   ⚠️ Error checking token ${tokenId}:`, err.message);
                     }
                 }
 
-                console.log(`   ✅ Found ${activeListings.length} active listings:`, activeListings);
+                console.log(`   ✅ Total active listings: ${activeListings.length}`);
                 setListings(activeListings);
                 setLoading(false);
 
@@ -182,6 +182,10 @@ export function useListings() {
         }
 
         loadListings();
+
+        // Refresh listings every 30 seconds
+        const interval = setInterval(loadListings, 30000);
+        return () => clearInterval(interval);
     }, [contract]);
 
     return { listings, loading };

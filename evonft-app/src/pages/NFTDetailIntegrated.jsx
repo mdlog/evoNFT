@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { ethers } from 'ethers'
 import { useNFT } from '../hooks/useContract'
 import { useNFTStats } from '../hooks/useExtendedContract'
 import { useWeb3 } from '../context/RainbowWeb3Context'
 import { useNFTVisuals } from '../hooks/useNFTVisuals'
 import { useNFTHistory } from '../hooks/useNFTHistory'
 import { useListing, useMarketplace } from '../hooks/useMarketplace'
+import { requestEvolution, calculateSignals } from '../services/evolutionService'
 import FeedModal from '../components/FeedModal'
 import TrainModal from '../components/TrainModal'
 import ListForSaleModal from '../components/ListForSaleModal'
@@ -16,8 +18,10 @@ import NetworkSwitcher from '../components/NetworkSwitcher'
 export default function NFTDetail() {
     const { id } = useParams()
     const { provider, account } = useWeb3()
+    const [refreshKey, setRefreshKey] = useState(0)
+
     const { nft: rawNft, loading: nftLoading } = useNFT(id)
-    const { stats, progress, loading: statsLoading } = useNFTStats(id)
+    const { stats, progress, loading: statsLoading } = useNFTStats(id, refreshKey)
     const { history, loading: historyLoading } = useNFTHistory(id)
     const { listing } = useListing(id)
     const { contractWithSigner: marketplaceContract } = useMarketplace()
@@ -32,6 +36,14 @@ export default function NFTDetail() {
     const [showListModal, setShowListModal] = useState(false)
     const [showBuyModal, setShowBuyModal] = useState(false)
     const [currentChainId, setCurrentChainId] = useState(null)
+    const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000))
+    const [isEvolving, setIsEvolving] = useState(false)
+
+    // Function to refresh data
+    const refreshData = () => {
+        console.log('🔄 Refreshing NFT data...')
+        setRefreshKey(prev => prev + 1)
+    }
 
     const isOwner = account && nft && account.toLowerCase() === nft.owner?.toLowerCase()
     const isListed = listing?.active
@@ -46,6 +58,15 @@ export default function NFTDetail() {
             })
         }
     }, [provider])
+
+    // Update current time every second for countdown
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(Math.floor(Date.now() / 1000))
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [])
 
     const loading = nftLoading || statsLoading
 
@@ -85,6 +106,84 @@ export default function NFTDetail() {
     // Get level from attributes or progress
     const level = progress?.currentLevel || nft.attributes?.find(a => a.trait_type === 'level')?.value || 1
     const rarity = nft.attributes?.find(a => a.trait_type === 'rarity')?.value || 'common'
+
+    // Handle evolution
+    const handleEvolveClick = async () => {
+        if (!provider || !account) {
+            alert('Please connect your wallet');
+            return;
+        }
+
+        setIsEvolving(true);
+
+        try {
+            console.log('🧬 Starting evolution process for token', id);
+
+            // Calculate signals based on NFT data
+            const signals = calculateSignals({ ...nft, level, stats });
+            console.log('📊 Calculated signals:', signals);
+
+            // Request evolution from AI backend
+            console.log('🤖 Requesting evolution from AI backend...');
+            const evolutionData = await requestEvolution(id, signals);
+            console.log('✅ Evolution data received:', evolutionData);
+
+            if (!evolutionData.success) {
+                throw new Error(evolutionData.error || 'Evolution request failed');
+            }
+
+            // Get contract with signer
+            const signer = await provider.getSigner();
+            const contractABI = [
+                "function requestEvolve(uint256 tokenId, string calldata newURI, uint256 deadline, bytes calldata signature) external"
+            ];
+            const contract = new ethers.Contract(
+                import.meta.env.VITE_NFT_CONTRACT,
+                contractABI,
+                signer
+            );
+
+            // Call smart contract
+            console.log('📝 Calling smart contract...');
+            const tx = await contract.requestEvolve(
+                id,
+                evolutionData.newMetadataURI,
+                evolutionData.deadline,
+                evolutionData.signature
+            );
+
+            console.log('⏳ Waiting for transaction confirmation...');
+            console.log('Transaction hash:', tx.hash);
+
+            await tx.wait();
+
+            console.log('✅ Evolution successful!');
+            alert(`🎉 Evolution Successful!\n\nYour NFT has evolved to ${evolutionData.evolutionType} form!\n\nTransaction: ${tx.hash}`);
+
+            // Reload page to show new data
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+
+        } catch (error) {
+            console.error('❌ Evolution error:', error);
+
+            let errorMessage = 'Evolution failed: ';
+            if (error.message.includes('Not eligible')) {
+                errorMessage += 'NFT is not eligible for evolution yet. Please wait for cooldown period.';
+            } else if (error.message.includes('Insufficient activity')) {
+                errorMessage += 'Insufficient activity score. Keep interacting with your NFT!';
+            } else if (error.message.includes('user rejected')) {
+                errorMessage += 'Transaction was rejected.';
+            } else {
+                errorMessage += error.message;
+            }
+
+            alert(errorMessage);
+        } finally {
+            setIsEvolving(false);
+        }
+    };
 
     return (
         <div className="min-h-screen py-8 px-4">
@@ -188,9 +287,12 @@ export default function NFTDetail() {
                                         >
                                             💪 Train
                                         </button>
-                                        <button className="px-6 py-4 glass-strong hover:glass rounded-xl font-semibold transition-all hover:scale-105 border border-slate-600 hover:border-primary-500">
-                                            🔒 Stake
-                                        </button>
+                                        <Link
+                                            to="/staking"
+                                            className="px-6 py-4 glass-strong hover:glass rounded-xl font-semibold transition-all hover:scale-105 border border-slate-600 hover:border-primary-500 text-center"
+                                        >
+                                            💎 Stake
+                                        </Link>
                                         <button
                                             onClick={() => setShowListModal(true)}
                                             className="px-6 py-4 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 rounded-xl font-semibold transition-all hover:scale-105"
@@ -304,22 +406,112 @@ export default function NFTDetail() {
                             <div className="glass-strong rounded-xl border border-slate-700/50 p-6">
                                 <h3 className="font-semibold mb-4">Evolution Status</h3>
                                 <div className="space-y-3">
-                                    <div className="flex justify-between">
+                                    <div className="flex justify-between items-center">
                                         <span className="text-slate-400">Can Evolve:</span>
-                                        <span className={nft.canEvolve ? 'text-secondary-500' : 'text-slate-500'}>
+                                        <span className={nft.canEvolve ? 'text-secondary-500 font-semibold' : 'text-slate-500'}>
                                             {nft.canEvolve ? '✅ Ready' : '⏳ Cooldown'}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-400">Version:</span>
-                                        <span className="font-semibold">{nft.version}</span>
+                                        <span className="font-semibold">{nft.version || 1}</span>
                                     </div>
                                     {nft.nextEvolveTime && (
                                         <div className="flex justify-between">
-                                            <span className="text-slate-400">Next Evolution:</span>
-                                            <span className="text-sm">
-                                                {new Date(nft.nextEvolveTime * 1000).toLocaleString()}
+                                            <span className="text-slate-400">
+                                                {nft.canEvolve ? 'Last Evolved:' : 'Next Evolution:'}
                                             </span>
+                                            <span className="text-sm">
+                                                {(() => {
+                                                    const now = Math.floor(Date.now() / 1000);
+                                                    const nextTime = nft.nextEvolveTime;
+
+                                                    // If can evolve (time has passed), show "Ready Now"
+                                                    if (nft.canEvolve || nextTime <= now) {
+                                                        return <span className="text-secondary-500 font-semibold">Ready Now!</span>;
+                                                    }
+
+                                                    // Otherwise show the next evolution time
+                                                    return new Date(nextTime * 1000).toLocaleString();
+                                                })()}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Countdown Timer if in cooldown */}
+                                    {!nft.canEvolve && nft.nextEvolveTime && (
+                                        <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                            <div className="text-xs text-slate-400 mb-1">Time Remaining:</div>
+                                            <div className="text-sm font-mono text-primary-400">
+                                                {(() => {
+                                                    const remaining = nft.nextEvolveTime - currentTime;
+
+                                                    if (remaining <= 0) {
+                                                        return <span className="text-secondary-500 font-bold">Ready!</span>;
+                                                    }
+
+                                                    const hours = Math.floor(remaining / 3600);
+                                                    const minutes = Math.floor((remaining % 3600) / 60);
+                                                    const seconds = remaining % 60;
+
+                                                    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                                                })()}
+                                            </div>
+                                            {/* Progress Bar */}
+                                            {(() => {
+                                                const totalCooldown = 86400; // 24 hours in seconds
+                                                const elapsed = totalCooldown - (nft.nextEvolveTime - currentTime);
+                                                const progress = Math.max(0, Math.min(100, (elapsed / totalCooldown) * 100));
+
+                                                return (
+                                                    <div className="mt-2">
+                                                        <div className="w-full bg-slate-700 rounded-full h-1.5">
+                                                            <div
+                                                                className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-1000"
+                                                                style={{ width: `${progress}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 mt-1 text-right">
+                                                            {progress.toFixed(1)}% complete
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    )}
+
+                                    {/* Evolution Info */}
+                                    <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                        <p className="text-xs text-slate-400">
+                                            {nft.canEvolve
+                                                ? '🧬 Your NFT is ready to evolve! Evolution will change its appearance and increase its version.'
+                                                : '⏳ Evolution requires a 24-hour cooldown period between each transformation.'
+                                            }
+                                        </p>
+                                    </div>
+
+                                    {/* Evolve Button */}
+                                    {nft.canEvolve && isOwner && (
+                                        <div className="mt-4">
+                                            <button
+                                                onClick={handleEvolveClick}
+                                                disabled={isEvolving}
+                                                className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isEvolving ? '🔄 Evolving...' : '🧬 Evolve Now'}
+                                            </button>
+                                            <p className="text-xs text-center text-slate-500 mt-2">
+                                                Evolution is AI-driven and requires backend signature
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Not Owner Message */}
+                                    {nft.canEvolve && !isOwner && (
+                                        <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                            <p className="text-xs text-yellow-400">
+                                                ⚠️ Only the owner can evolve this NFT
+                                            </p>
                                         </div>
                                     )}
                                 </div>
@@ -431,8 +623,10 @@ export default function NFTDetail() {
                 isOpen={showFeedModal}
                 onClose={() => {
                     setShowFeedModal(false);
-                    // Reload page to refresh NFT data
-                    globalThis.location.reload();
+                }}
+                onSuccess={() => {
+                    console.log('✅ Feed successful, refreshing data...');
+                    refreshData();
                 }}
                 tokenId={id}
                 nftName={nft.name}
@@ -442,8 +636,10 @@ export default function NFTDetail() {
                 isOpen={showTrainModal}
                 onClose={() => {
                     setShowTrainModal(false);
-                    // Reload page to refresh NFT data
-                    globalThis.location.reload();
+                }}
+                onSuccess={() => {
+                    console.log('✅ Train successful, refreshing data...');
+                    refreshData();
                 }}
                 tokenId={id}
                 nftName={nft.name}

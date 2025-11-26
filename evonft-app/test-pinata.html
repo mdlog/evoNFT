@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pinata Connection</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .container {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #8b5cf6;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(to right, #8b5cf6, #ec4899);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #334155;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .success {
+            border-left: 4px solid #10b981;
+        }
+
+        .error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .info {
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Pinata IPFS Test</h1>
+
+        <div>
+            <button onclick="testConnection()">Test Connection</button>
+            <button onclick="testUpload()">Test Upload Metadata</button>
+            <button onclick="testFetch()">Test Fetch Metadata</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyM2QwNDNhNS02MDgxLTQ1ZDAtOTliOC0wNTIyZjIwNjM5ZWQiLCJlbWFpbCI6ImFkaWFkaTI0MTFAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6ImZhNjdlODc4NTcyNjlmZTE5OWJkIiwic2NvcGVkS2V5U2VjcmV0IjoiMWIxZTcwYTMyNWM5MjFhZDJhYThjMGQ3NGJjOGY1OGQyN2I0MWMyMmQ4ZTMzNWE1ODJmNGI2YWYxYTkxOWY1MyIsImV4cCI6MTc5MzkwMDQxMn0.OuZASD-rLRQfomvRGvH1yM0wl_szB357R7akNOj1zm0';
+
+        let lastUploadedHash = '';
+
+        window.testConnection = async function () {
+            const result = document.getElementById('result');
+            result.className = 'result info';
+            result.textContent = '⏳ Testing connection...';
+
+            try {
+                const response = await fetch('https://api.pinata.cloud/data/testAuthentication', {
+                    headers: {
+                        'Authorization': `Bearer ${PINATA_JWT}`
+                    }
+                });
+
+                const data = await response.json();
+
+                result.className = 'result success';
+                result.textContent = `✅ Connection Successful!\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Connection Failed!\n\n${error.message}`;
+            }
+        };
+
+        window.testUpload = async function () {
+            const result = document.getElementById('result');
+            result.className = 'result info';
+            result.textContent = '⏳ Uploading test metadata...';
+
+            const testMetadata = {
+                name: "Test EvoNFT",
+                description: "Testing Pinata IPFS upload",
+                attributes: [
+                    { trait_type: "Strength", value: 25 },
+                    { trait_type: "Intelligence", value: 30 },
+                    { trait_type: "Speed", value: 20 }
+                ],
+                timestamp: Date.now()
+            };
+
+            try {
+                const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${PINATA_JWT}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pinataContent: testMetadata,
+                        pinataMetadata: {
+                            name: `Test-${Date.now()}`
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                lastUploadedHash = data.IpfsHash;
+
+                result.className = 'result success';
+                result.textContent = `✅ Upload Successful!\n\nIPFS Hash: ${data.IpfsHash}\nIPFS URI: ipfs://${data.IpfsHash}\nGateway URL: https://gateway.pinata.cloud/ipfs/${data.IpfsHash}\n\nMetadata:\n${JSON.stringify(testMetadata, null, 2)}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Upload Failed!\n\n${error.message}`;
+            }
+        };
+
+        window.testFetch = async function () {
+            const result = document.getElementById('result');
+
+            if (!lastUploadedHash) {
+                result.className = 'result error';
+                result.textContent = '❌ No hash available. Upload metadata first!';
+                return;
+            }
+
+            result.className = 'result info';
+            result.textContent = '⏳ Fetching metadata from IPFS...';
+
+            try {
+                const response = await fetch(`https://gateway.pinata.cloud/ipfs/${lastUploadedHash}`);
+                const data = await response.json();
+
+                result.className = 'result success';
+                result.textContent = `✅ Fetch Successful!\n\nFetched from: ${lastUploadedHash}\n\nMetadata:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Fetch Failed!\n\n${error.message}`;
+            }
+        };
+    </script>
+</body>
+
+</html>

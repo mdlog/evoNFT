@@ -1,0 +1,12 @@
+{
+  "network": "amoy",
+  "chainId": "80002",
+  "deployer": "0x3e4d881819768fab30c5a79F3A9A7e69f0a935a4",
+  "aiSigner": "0x3e4d881819768fab30c5a79F3A9A7e69f0a935a4",
+  "contracts": {
+    "NFT": "0xe31d18Fb9925f677451845997f64806a88264b3D",
+    "Staking": "0xB7d914D84d6b5f21ef53B4B56DCB56508115C838",
+    "Breeding": "0x39d6b4ba1CDe6A43Fa6A3a63Df38b299041A2986"
+  },
+  "timestamp": "2025-11-05T11:42:17.903Z"
+}

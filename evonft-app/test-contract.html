@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test EvoNFT Contract</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+</head>
+
+<body>
+    <h1>Test EvoNFT Contract Connection</h1>
+    <div id="results"></div>
+
+    <script>
+        const CONTRACT_ADDRESS = '0xe31d18Fb9925f677451845997f64806a88264b3D';
+        const RPC_URL = 'https://rpc-amoy.polygon.technology';
+
+        const ABI = [
+            "function totalMinted() view returns (uint256)",
+            "function maxSupply() view returns (uint256)",
+            "function mintPrice() view returns (uint256)",
+            "function name() view returns (string)",
+            "function symbol() view returns (string)"
+        ];
+
+        async function testContract() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing contract...</p>';
+
+            try {
+                // Create provider
+                const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+                results.innerHTML += '<p>✅ Provider connected</p>';
+
+                // Create contract instance
+                const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+                results.innerHTML += '<p>✅ Contract instance created</p>';
+
+                // Test contract calls
+                const name = await contract.name();
+                results.innerHTML += `<p>✅ Name: ${name}</p>`;
+
+                const symbol = await contract.symbol();
+                results.innerHTML += `<p>✅ Symbol: ${symbol}</p>`;
+
+                const totalMinted = await contract.totalMinted();
+                results.innerHTML += `<p>✅ Total Minted: ${totalMinted.toString()}</p>`;
+
+                const maxSupply = await contract.maxSupply();
+                results.innerHTML += `<p>✅ Max Supply: ${maxSupply.toString()}</p>`;
+
+                const mintPrice = await contract.mintPrice();
+                results.innerHTML += `<p>✅ Mint Price: ${ethers.utils.formatEther(mintPrice)} MATIC</p>`;
+
+                results.innerHTML += '<hr><h2 style="color: green;">✅ ALL TESTS PASSED!</h2>';
+                results.innerHTML += `<p><strong>Contract is working correctly!</strong></p>`;
+                results.innerHTML += `<p>Minted: ${totalMinted}/${maxSupply}</p>`;
+                results.innerHTML += `<p>Price: ${ethers.utils.formatEther(mintPrice)} MATIC</p>`;
+
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">❌ Error: ${error.message}</p>`;
+                console.error('Full error:', error);
+            }
+        }
+
+        // Run test on page load
+        testContract();
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        h1 {
+            color: #4ade80;
+        }
+
+        #results {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+    </style>
+</body>
+
+</html>

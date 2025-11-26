@@ -1,15 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNFTExtended, useNFTStats } from '../hooks/useExtendedContract';
 import { ethers } from 'ethers';
 
 export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSuccess }) {
-    const { contractWithSigner } = useNFTExtended();
+    const { contract, contractWithSigner } = useNFTExtended();
     const { stats, loading } = useNFTStats(tokenId);
     const [training, setTraining] = useState(false);
     const [selectedStat, setSelectedStat] = useState(null);
+    const [trainPrice, setTrainPrice] = useState('0.3');
 
-    const TRAIN_PRICE = '0.3';
+    // Get train price from contract
+    useEffect(() => {
+        if (contract) {
+            contract.getTrainPrice().then(price => {
+                setTrainPrice(ethers.formatEther(price));
+                console.log('💰 Train price from contract:', ethers.formatEther(price), 'MATIC');
+            }).catch(err => {
+                console.warn('⚠️ Could not get train price, using default:', err.message);
+            });
+        }
+    }, [contract]);
+
+    const TRAIN_PRICE = trainPrice;
 
     const statOptions = [
         {
@@ -55,13 +68,63 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSucces
     ];
 
     async function handleTrain() {
-        if (!selectedStat || !contractWithSigner) return;
+        if (!selectedStat || !contractWithSigner) {
+            console.error('❌ Cannot train: missing requirements');
+            return;
+        }
 
         try {
             setTraining(true);
 
+            console.log('🏋️ Starting train transaction...');
+            console.log('   Token ID:', tokenId);
+            console.log('   Stat Type:', selectedStat.type, '(' + selectedStat.name + ')');
+            console.log('   Price:', TRAIN_PRICE, 'MATIC');
+            console.log('   Contract:', contractWithSigner.target || contractWithSigner.address);
+
+            // Pre-check: verify ownership
+            const owner = await contractWithSigner.ownerOf(tokenId);
+            const signer = await contractWithSigner.runner.getAddress();
+            console.log('   Owner:', owner);
+            console.log('   Signer:', signer);
+
+            if (owner.toLowerCase() !== signer.toLowerCase()) {
+                throw new Error('You are not the owner of this NFT');
+            }
+
+            // Pre-check: verify stat not maxed
+            if (selectedStat.current >= 100) {
+                throw new Error('This stat is already at maximum (100)');
+            }
+
+            // Try to estimate gas first
+            let gasLimit;
+            try {
+                gasLimit = await contractWithSigner.train.estimateGas(tokenId, selectedStat.type, {
+                    value: ethers.parseEther(TRAIN_PRICE)
+                });
+                console.log('   Estimated gas:', gasLimit.toString());
+            } catch (estimateError) {
+                console.error('❌ Gas estimation failed:', estimateError.message);
+
+                // Check specific errors
+                if (estimateError.message.includes('ERC721: invalid token ID')) {
+                    throw new Error(`NFT #${tokenId} does not exist`);
+                }
+                if (estimateError.message.includes('Not token owner')) {
+                    throw new Error('You are not the owner of this NFT');
+                }
+                if (estimateError.message.includes('Stat already maxed')) {
+                    throw new Error('This stat is already at maximum (100)');
+                }
+
+                // Generic error
+                throw new Error('Transaction will fail. Please check: 1) NFT exists, 2) You own it, 3) Stat not maxed, 4) Sufficient balance');
+            }
+
             const tx = await contractWithSigner.train(tokenId, selectedStat.type, {
-                value: ethers.parseEther(TRAIN_PRICE)
+                value: ethers.parseEther(TRAIN_PRICE),
+                gasLimit: gasLimit
             });
 
             console.log('Train transaction sent:', tx.hash);
@@ -82,18 +145,46 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSucces
             onClose();
 
         } catch (error) {
-            console.error('Train error:', error);
+            console.error('❌ Train error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                code: error.code,
+                reason: error.reason,
+                data: error.data
+            });
 
             let errorMessage = 'Failed to train NFT';
-            if (error.message.includes('user rejected')) {
-                errorMessage = 'Transaction cancelled by user';
-            } else if (error.message.includes('insufficient funds')) {
-                errorMessage = 'Insufficient MATIC balance';
+
+            // Check for specific error types
+            if (error.message.includes('user rejected') || error.code === 'ACTION_REJECTED') {
+                errorMessage = '❌ Transaction Cancelled\n\nYou rejected the transaction in your wallet.';
+            } else if (error.message.includes('insufficient funds') || error.code === 'INSUFFICIENT_FUNDS') {
+                errorMessage = `💰 Insufficient Balance!\n\nYou need ${TRAIN_PRICE} MATIC + gas fees (~0.001 MATIC)\nTotal required: ~${(parseFloat(TRAIN_PRICE) + 0.001).toFixed(3)} MATIC\n\nYour current balance is too low.\nPlease add more MATIC to your wallet.`;
             } else if (error.message.includes('Stat already maxed')) {
-                errorMessage = 'This stat is already at maximum (100)';
+                errorMessage = `🎯 Stat Already Maxed!\n\n${selectedStat?.name || 'This stat'} is already at maximum (100/100).\n\nYou cannot train this stat further.`;
+            } else if (error.message.includes('Not token owner')) {
+                errorMessage = '🚫 Not Owner\n\nYou are not the owner of this NFT.\n\nOnly the owner can train their NFT.';
+            } else if (error.message.includes('does not exist') || error.message.includes('invalid token ID')) {
+                errorMessage = `🚫 NFT Not Found\n\nNFT #${tokenId} does not exist.\n\nPlease check the token ID.`;
+            } else if (error.message.includes('Transaction will fail')) {
+                errorMessage = `⚠️ Transaction Will Fail\n\nPre-flight check failed. Please verify:\n\n1. NFT #${tokenId} exists\n2. You own this NFT\n3. Stat is not maxed (< 100)\n4. You have at least ${(parseFloat(TRAIN_PRICE) + 0.01).toFixed(2)} MATIC`;
+            } else if (error.reason) {
+                errorMessage = `❌ Contract Error\n\n${error.reason}`;
+            } else {
+                errorMessage = `❌ Transaction Failed\n\n${error.message.substring(0, 150)}`;
             }
 
             alert(errorMessage);
+
+            // Show detailed help
+            if (error.message.includes('Transaction will fail')) {
+                console.log('💡 Troubleshooting tips:');
+                console.log('   1. Make sure NFT #' + tokenId + ' exists (check My NFTs page)');
+                console.log('   2. Verify you own this NFT');
+                console.log('   3. Check stat is not already 100');
+                console.log('   4. Ensure you have at least 0.35 MATIC (0.3 + gas)');
+            }
+            console.error('📋 Full error for debugging:', JSON.stringify(error, null, 2));
         } finally {
             setTraining(false);
         }

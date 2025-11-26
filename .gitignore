@@ -68,11 +68,8 @@ test-*.js
 *-test.js
 *.test.js
 
-# Documentation files (except README.md)
-*.md
-!README.md
-!evonft-app/README.md
-!evonft-contracts/README.md
+# Documentation files - include important docs
+!*.md
 
 # Shell scripts (test/utility scripts)
 quick-fix.sh

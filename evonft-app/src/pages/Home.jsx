@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { NFTVisual } from '../components/NFTVisual'
 import { useMockNFTs } from '../hooks/useNFTVisuals'
+import { useRecentActivity } from '../hooks/useRecentActivity'
 
 export default function Home() {
-    const mockNFTs = useMockNFTs(3) // Generate 3 sample NFTs for preview
+    const mockNFTs = useMockNFTs(3) || [] // Generate 3 sample NFTs for preview
+    const { activities, loading: activitiesLoading } = useRecentActivity(5) // Get 5 recent activities
 
     const stats = [
         { value: '12,543', label: 'Total Minted', icon: '🎨' },
@@ -20,11 +22,7 @@ export default function Home() {
         { icon: '💰', title: 'Trade', desc: 'or Keep', color: 'from-accent-500 to-accent-600' }
     ]
 
-    const activities = [
-        { icon: '🎉', text: 'EvoNFT #1234 reached Level 10!', time: '2 min ago', color: 'from-primary-500/20 to-transparent' },
-        { icon: '🔥', text: 'EvoNFT #5678 evolved to Legendary form', time: '15 min ago', color: 'from-accent-500/20 to-transparent' },
-        { icon: '⭐', text: 'EvoNFT #9012 unlocked rare trait', time: '1 hour ago', color: 'from-secondary-500/20 to-transparent' }
-    ]
+
 
     return (
         <div className="min-h-screen">
@@ -99,32 +97,39 @@ export default function Home() {
                             <div className="relative mb-8">
                                 <div className="absolute inset-0 bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 rounded-3xl blur-2xl opacity-50 animate-pulse"></div>
                                 <div className="relative aspect-square max-w-md mx-auto glass-strong rounded-3xl border-2 border-primary-500/30 flex items-center justify-center overflow-hidden group hover:border-primary-500 transition-all">
-                                    {mockNFTs[0] && (
-                                        <NFTVisual
-                                            tokenId={mockNFTs[0].tokenId}
-                                            level={mockNFTs[0].level}
-                                            creatureType={mockNFTs[0].creatureType}
-                                            rarity={mockNFTs[0].rarity}
-                                            size={350}
-                                            animated={true}
-                                            className="group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                    )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    {mockNFTs.length > 0 && mockNFTs[0] ? (
+                                        <>
+                                            <NFTVisual
+                                                tokenId={mockNFTs[0].tokenId}
+                                                level={mockNFTs[0].level}
+                                                creatureType={mockNFTs[0].creatureType}
+                                                rarity={mockNFTs[0].rarity}
+                                                size={350}
+                                                animated={true}
+                                                className="group-hover:scale-110 transition-transform duration-500"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                                    {/* Floating info */}
-                                    <div className="absolute bottom-4 left-4 right-4 glass-strong rounded-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="text-center">
-                                            <h4 className="font-bold text-lg">{mockNFTs[0]?.name}</h4>
-                                            <p className="text-sm text-slate-300">Interactive • Evolvable • Unique</p>
+                                            {/* Floating info */}
+                                            <div className="absolute bottom-4 left-4 right-4 glass-strong rounded-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="text-center">
+                                                    <h4 className="font-bold text-lg">{mockNFTs[0]?.name}</h4>
+                                                    <p className="text-sm text-slate-300">Interactive • Evolvable • Unique</p>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="text-slate-400 text-center">
+                                            <div className="text-6xl mb-4">🎨</div>
+                                            <p>Loading preview...</p>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Mini NFT Gallery */}
                             <div className="flex justify-center gap-4">
-                                {mockNFTs.slice(1, 3).map((nft, index) => (
+                                {mockNFTs.length > 1 && mockNFTs.slice(1, 3).map((nft, index) => (
                                     <motion.div
                                         key={nft.tokenId}
                                         initial={{ opacity: 0, y: 20 }}
@@ -251,29 +256,54 @@ export default function Home() {
                         Recent <span className="text-gradient">Activity</span>
                     </motion.h2>
 
-                    <div className="space-y-4">
-                        {activities.map((activity) => (
-                            <motion.div
-                                key={activity.text}
-                                initial={{ opacity: 0, x: -30 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: activities.indexOf(activity) * 0.1 }}
-                                whileHover={{ x: 10, scale: 1.02 }}
-                                className="relative overflow-hidden"
-                            >
-                                <div className={`absolute inset-0 bg-gradient-to-r ${activity.color}`}></div>
-                                <div className="relative flex items-center gap-4 p-6 glass-strong rounded-2xl border border-slate-700/50 hover:border-primary-500/50 transition-all">
-                                    <div className="text-4xl">{activity.icon}</div>
-                                    <div className="flex-1">
-                                        <p className="text-slate-100 font-medium mb-1">{activity.text}</p>
-                                        <p className="text-sm text-slate-400">{activity.time}</p>
+                    {activitiesLoading ? (
+                        <div className="space-y-4">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="glass-strong rounded-2xl p-6 border border-slate-700/50 animate-pulse">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-slate-700 rounded-full"></div>
+                                        <div className="flex-1 space-y-2">
+                                            <div className="h-4 bg-slate-700 rounded w-3/4"></div>
+                                            <div className="h-3 bg-slate-700 rounded w-1/4"></div>
+                                        </div>
                                     </div>
-                                    <div className="text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity">→</div>
                                 </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : activities.length > 0 ? (
+                        <div className="space-y-4">
+                            {activities.map((activity, index) => (
+                                <motion.div
+                                    key={activity.txHash || `${activity.text}-${index}`}
+                                    initial={{ opacity: 0, x: -30 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.1 }}
+                                    whileHover={{ x: 10, scale: 1.02 }}
+                                    className="relative overflow-hidden group"
+                                >
+                                    <div className={`absolute inset-0 bg-gradient-to-r ${activity.color}`}></div>
+                                    <Link
+                                        to={activity.tokenId ? `/nft/${activity.tokenId}` : '#'}
+                                        className="relative flex items-center gap-4 p-6 glass-strong rounded-2xl border border-slate-700/50 hover:border-primary-500/50 transition-all"
+                                    >
+                                        <div className="text-4xl">{activity.icon}</div>
+                                        <div className="flex-1">
+                                            <p className="text-slate-100 font-medium mb-1">{activity.text}</p>
+                                            <p className="text-sm text-slate-400">{activity.time}</p>
+                                        </div>
+                                        <div className="text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity">→</div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 glass-strong rounded-2xl border border-slate-700/50">
+                            <div className="text-6xl mb-4">📭</div>
+                            <h3 className="text-xl font-semibold mb-2">No Recent Activity</h3>
+                            <p className="text-slate-400">Be the first to mint an NFT!</p>
+                        </div>
+                    )}
                 </div>
             </section>
 

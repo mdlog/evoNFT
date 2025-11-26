@@ -1,0 +1,8 @@
+{
+  "network": "amoy",
+  "marketplaceAddress": "0x4fe6d4C271300BB796f8F00751aA46f93667D677",
+  "nftContract": "0xe31d18Fb9925f677451845997f64806a88264b3D",
+  "deployer": "0x3e4d881819768fab30c5a79F3A9A7e69f0a935a4",
+  "timestamp": "2025-11-05T13:53:06.387Z",
+  "marketplaceFee": "2.5%"
+}

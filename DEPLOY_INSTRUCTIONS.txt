@@ -1,0 +1,62 @@
+🧬 BREEDING CONTRACT DEPLOYMENT - SIMPLE STEPS
+================================================
+
+IMPORTANT: You are currently in the WRONG directory!
+You are in: evonft-contracts/evonft-contracts (double folder)
+You need to be in: evonft-contracts (single folder)
+
+STEP 1: Go back to correct directory
+-------------------------------------
+cd ..
+
+You should now be in: /media/mdlog/mdlog/Project-MDlabs/polygon-nft/evonft-contracts
+
+STEP 2: Verify you're in correct directory
+-------------------------------------------
+ls scripts/
+
+You should see:
+- deploy-breeding.js
+- grant-minter-role.js
+
+STEP 3: Deploy breeding contract
+---------------------------------
+npx hardhat run scripts/deploy-breeding.js --network amoy
+
+STEP 4: Grant minter role
+--------------------------
+npx hardhat run scripts/grant-minter-role.js --network amoy
+
+STEP 5: Update frontend .env
+-----------------------------
+Copy the breeding contract address from Step 3 output, then:
+
+cd ../evonft-app
+nano .env
+
+Add this line (replace with your address):
+VITE_BREEDING_CONTRACT=0xYOUR_BREEDING_ADDRESS_HERE
+
+Save and exit (Ctrl+X, Y, Enter)
+
+STEP 6: Restart frontend
+-------------------------
+rm -rf node_modules/.vite
+npm run dev
+
+STEP 7: Test
+------------
+Open browser: http://localhost:5173/breeding
+
+================================================
+QUICK COPY-PASTE COMMANDS:
+================================================
+
+cd ..
+npx hardhat run scripts/deploy-breeding.js --network amoy
+npx hardhat run scripts/grant-minter-role.js --network amoy
+
+# Then manually add VITE_BREEDING_CONTRACT to evonft-app/.env
+# Then restart frontend
+
+================================================

@@ -390,12 +390,24 @@ function StakeModal({ unstakedNFTs, onClose, onStake, processing }) {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="glass rounded-xl p-4 text-center hover:border-primary-500/50 transition-all"
                                 >
-                                    <img
-                                        src={nft.image}
-                                        alt={nft.name}
-                                        className="w-full aspect-square object-cover rounded-lg mb-3"
-                                    />
-                                    <h3 className="font-semibold mb-1">{nft.name}</h3>
+                                    <div className="relative w-full aspect-square mb-3 rounded-lg overflow-hidden bg-slate-800">
+                                        {nft.image ? (
+                                            <img
+                                                src={nft.image}
+                                                alt={nft.name || `NFT #${nft.id}`}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.onerror = null
+                                                    e.target.src = `https://via.placeholder.com/300/8B5CF6/FFFFFF?text=NFT+%23${nft.id}`
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-500/20 to-secondary-500/20">
+                                                <span className="text-4xl font-bold text-slate-400">#{nft.id}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <h3 className="font-semibold mb-1">{nft.name || `EvoNFT #${nft.id}`}</h3>
                                     <p className="text-sm text-slate-400 mb-1">#{nft.id}</p>
                                     <p className="text-sm text-secondary-500 mb-3">Level {nft.level || 1}</p>
 
@@ -760,6 +772,3 @@ function StakedNFTCard({ tokenId, onClaim, onUnstake, processing }) {
         </motion.div>
     )
 }
-
-// PropTypes removed - install prop-types package if you need runtime type checking
-// Run: npm install prop-types

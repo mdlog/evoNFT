@@ -69,10 +69,20 @@ export default function FeedModal({ isOpen, onClose, tokenId, nftName, onSuccess
             console.error('Feed error:', error);
 
             let errorMessage = 'Failed to feed NFT';
-            if (error.message.includes('user rejected')) {
-                errorMessage = 'Transaction cancelled by user';
-            } else if (error.message.includes('insufficient funds')) {
-                errorMessage = 'Insufficient MATIC balance';
+
+            // Check for specific error types
+            if (error.message.includes('user rejected') || error.code === 'ACTION_REJECTED') {
+                errorMessage = '❌ Transaction Cancelled\n\nYou rejected the transaction in your wallet.';
+            } else if (error.message.includes('insufficient funds') || error.code === 'INSUFFICIENT_FUNDS') {
+                errorMessage = `💰 Insufficient Balance!\n\nYou need ${selectedFood.price} MATIC + gas fees (~0.001 MATIC)\nTotal required: ~${(parseFloat(selectedFood.price) + 0.001).toFixed(3)} MATIC\n\nYour current balance is too low.\nPlease add more MATIC to your wallet.`;
+            } else if (error.message.includes('Not token owner')) {
+                errorMessage = '🚫 Not Owner\n\nYou are not the owner of this NFT.';
+            } else if (error.message.includes('ERC721: invalid token ID')) {
+                errorMessage = `🚫 NFT Not Found\n\nNFT #${tokenId} does not exist.`;
+            } else if (error.reason) {
+                errorMessage = `❌ Contract Error\n\n${error.reason}`;
+            } else {
+                errorMessage = `❌ Transaction Failed\n\n${error.message.substring(0, 150)}`;
             }
 
             alert(errorMessage);
