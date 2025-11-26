@@ -68,8 +68,10 @@ test-*.js
 *-test.js
 *.test.js
 
-# Documentation files - include important docs
-!*.md
+# Documentation files (exclude all except README.md)
+*.md
+!README.md
+!*/README.md
 
 # Shell scripts (test/utility scripts)
 quick-fix.sh
