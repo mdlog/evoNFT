@@ -21,7 +21,7 @@ async function main() {
     console.log("   AI Signer:", AI_SIGNER);
 
     // Deploy contract
-    const EvolvableNFT = await hre.ethers.getContractFactory("EvolvableNFT");
+    const EvolvableNFT = await hre.ethers.getContractFactory("EvolvableNFTExtended");
     const evolvableNFT = await EvolvableNFT.deploy(NAME, SYMBOL, AI_SIGNER);
 
     await evolvableNFT.waitForDeployment();
