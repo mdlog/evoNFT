@@ -1,0 +1,11 @@
+{
+  "network": "amoy",
+  "contractAddress": "0x05CE3f252A5e46c3443A35907DCA0f683F1085AF",
+  "deployer": "0x3e4d881819768fab30c5a79F3A9A7e69f0a935a4",
+  "aiSigner": "0x3e4d881819768fab30c5a79F3A9A7e69f0a935a4",
+  "mintPrice": "10000000000000000",
+  "maxSupply": "10000",
+  "cooldown": "86400",
+  "timestamp": "2025-11-26T15:43:35.014Z",
+  "blockNumber": 29556891
+}

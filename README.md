@@ -129,10 +129,10 @@ All contracts deployed on **Polygon Amoy Testnet**:
 
 | Contract | Address |
 |----------|---------|
-| **NFT** | [`0xe31d18Fb9925f677451845997f64806a88264b3D`](https://amoy.polygonscan.com/address/0xe31d18Fb9925f677451845997f64806a88264b3D) |
-| **Staking** | [`0xB7d914D84d6b5f21ef53B4B56DCB56508115C838`](https://amoy.polygonscan.com/address/0xB7d914D84d6b5f21ef53B4B56DCB56508115C838) |
-| **Breeding** | [`0x5CcE235E35c7D6bcD0aaca9744e60a0D72cF6250`](https://amoy.polygonscan.com/address/0x5CcE235E35c7D6bcD0aaca9744e60a0D72cF6250) |
-| **Marketplace** | [`0x4fe6d4C271300BB796f8F00751aA46f93667D677`](https://amoy.polygonscan.com/address/0x4fe6d4C271300BB796f8F00751aA46f93667D677) |
+| **NFT** | [`0x05CE3f252A5e46c3443A35907DCA0f683F1085AF`](https://amoy.polygonscan.com/address/0x05CE3f252A5e46c3443A35907DCA0f683F1085AF) |
+| **Staking** | [`0x31e8c99643b1aE003dA35e4Db30732DD15308e09`](https://amoy.polygonscan.com/address/0x31e8c99643b1aE003dA35e4Db30732DD15308e09) |
+| **Breeding** | [`0xC3dCcA4B2b90d534fdc6c25c4Cacb2071eDA705d`](https://amoy.polygonscan.com/address/0xC3dCcA4B2b90d534fdc6c25c4Cacb2071eDA705d) |
+| **Marketplace** | [`0x440efd038Bfcd2209b1eeba32edF0Ac0A90002D1`](https://amoy.polygonscan.com/address/0x440efd038Bfcd2209b1eeba32edF0Ac0A90002D1) |
 
 ---
 
