@@ -3,426 +3,176 @@
   
   # 🎮 EvoNFT - Evolving Digital Companions
   
- 
-  
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Network](https://img.shields.io/badge/Network-Polygon%20Amoy-8247E5)](https://amoy.polygonscan.com)
+  
+  **Smart NFTs that grow, evolve, and earn rewards on Polygon**
 </div>
 
 ---
 
-## ✨ Features
+## ✨ What is EvoNFT?
 
-- 🎨 **Mint NFTs** - Create unique evolving NFTs with IPFS metadata
-- 📈 **Level Up** - Feed & train to increase stats and XP
-- 🧬 **Evolution System** - NFTs transform appearance with 24h cooldown & AI signatures
-- 🧬 **Breeding** - Combine 2 NFTs to create offspring with inherited traits
-- 💎 **Staking** - Stake NFTs to earn 0.01-0.02 MATIC/day with tier bonuses (MATIC only, no XP)
-- 🛒 **Marketplace** - Buy and sell NFTs peer-to-peer with 2.5% platform fee
-- 🌈 **Multi-Wallet** - RainbowKit integration (MetaMask, WalletConnect, Coinbase, etc.)
+EvoNFT is a gamified NFT platform where your digital companions **evolve over time**. Train them, breed them, stake them for rewards, and trade them in the marketplace.
 
-## 🎯 NFT System
+### Key Features
 
-### Level Progression
-Your EvoNFT grows stronger as you interact with it:
+- 🎨 **Mint** unique NFTs with dynamic stats
+- 💪 **Train** to increase stats (Strength, Intelligence, Speed, Endurance, Luck)
+- 🍖 **Feed** to gain XP and level up
+- 🧬 **Breed** two NFTs to create offspring
+- 💎 **Stake** to earn passive MATIC rewards
+- 🎭 **Evolve** appearance with AI-generated images
+- 🛒 **Trade** in peer-to-peer marketplace
 
-| Level | XP Required | Unlock |
-|-------|-------------|--------|
-| 1 | 0 XP | Starting level |
-| 2 | 100 XP | Basic training unlocked |
-| 3 | 250 XP | Breeding available |
-| 4 | 500 XP | Advanced stats boost |
-| 5 | 1000 XP | Elite status |
-| 6+ | +500 XP per level | Master tier |
-
-**Gain XP by:**
-- 🍖 **Feeding** - +10 to +500 XP (depending on food type: Basic/Premium/Legendary)
-- 💪 **Training** - +100 XP per training session (also increases selected stat by 1)
-- 🧬 **Breeding** - +50 XP for both parent NFTs
-
-**Note:** Staking earns MATIC rewards, not XP. To gain XP, use Feed/Train/Breed actions.
-
-### Rarity Tiers
-NFTs are categorized by their base stats and potential:
-
-| Rarity | Base Stats Range | Breeding Bonus | Market Value |
-|--------|------------------|----------------|--------------|
-| ⚪ **Common** | 10-20 | Standard | 💰 |
-| 🟢 **Uncommon** | 21-35 | +5% stats | 💰💰 |
-| 🔵 **Rare** | 36-50 | +10% stats | 💰💰💰 |
-| 🟣 **Epic** | 51-70 | +15% stats | 💰💰💰💰 |
-| 🟠 **Legendary** | 71-90 | +25% stats | 💰💰💰💰💰 |
-| 🔴 **Mythic** | 91-100 | +50% stats | 💰💰💰💰💰💰 |
-
-**Rarity affects:**
-- Initial stat distribution (Health, Strength, Intelligence)
-- Breeding offspring quality
-- Staking reward multiplier
-- Marketplace demand
-
-### Stats Explained
-Each NFT has 5 trainable attributes:
-
-- 💪 **Strength** - Physical power and combat ability
-- 🧠 **Intelligence** - Learning speed and problem solving
-- ⚡ **Speed** - Agility and reaction time
-- 🛡️ **Endurance** - Stamina and durability
-- 🍀 **Luck** - Fortune and rare event chances
-
-All stats start at 5 and can be trained up to 100 (max)
-
-**Stat Growth:**
-- Feed: +10 XP (Cost: 0.1-1.0 MATIC depending on food type)
-- Train: +1 to selected stat, +100 XP (Cost: 0.3 MATIC)
-- Breed: +50 XP for both parents (Cost: 0.01 MATIC, 24h cooldown)
-- Stake: Earn MATIC rewards (no XP)
-- Level Up: Automatic when XP threshold reached
-
-**5 Trainable Stats:**
-- 💪 **Strength** - Physical power
-- 🧠 **Intelligence** - Learning ability  
-- ⚡ **Speed** - Agility and reaction
-- 🛡️ **Endurance** - Stamina and durability
-- 🍀 **Luck** - Fortune and rare events
-
-Each stat can be trained up to 100 (max)
-
-## 🧬 Evolution System
-
-### How Evolution Works
-
-Evolution is different from leveling up - it **transforms your NFT's appearance** and increases its version number.
-
-**Evolution Process:**
-1. **Cooldown Period** - 24 hours between evolutions
-2. **AI Analysis** - AI engine monitors your NFT activity
-3. **Metadata Generation** - New image and attributes created
-4. **Signature Required** - AI signs evolution request (EIP-712)
-5. **User Confirmation** - Click "Evolve Now" button
-6. **Transformation** - NFT appearance changes, version increases
-
-**Evolution Status:**
-- ✅ **Ready** - Cooldown complete, can evolve now
-- ⏳ **Cooldown** - Must wait (shows countdown timer)
-- **Version** - Tracks evolution stage (1 → 2 → 3 → ...)
-
-**Key Features:**
-- 🔒 24-hour cooldown between evolutions
-- 🤖 AI-driven metadata generation
-- 🎨 Appearance changes with each evolution
-- 📈 Version tracking (Baby → Teen → Adult → Elder)
-- 🔐 Secure with EIP-712 signatures
-
-## 💎 Staking System
-
-### Earn Passive Rewards
-
-Stake your NFTs to earn XP and MATIC rewards automatically!
-
-**Base Rewards:**
-- 50 XP per day
-- 0.01 MATIC per day
-
-**Tier Bonuses (Based on Staking Duration):**
-
-| Tier | Days Staked | Bonus | Daily Rewards |
-|------|-------------|-------|---------------|
-| 🥉 Bronze | 1-7 days | 0% | 50 XP + 0.01 MATIC |
-| 🥈 Silver | 8-30 days | +20% | 60 XP + 0.012 MATIC |
-| 🥇 Gold | 31-90 days | +50% | 75 XP + 0.015 MATIC |
-| 💎 Diamond | 90+ days | +100% | 100 XP + 0.02 MATIC |
-
-**How to Stake:**
-1. Go to Staking page
-2. Click "Stake NFTs"
-3. Select NFT from your collection
-4. Approve NFT (transaction 1)
-5. Stake NFT (transaction 2)
-6. Start earning rewards immediately!
-
-**Claiming Rewards:**
-- Claim anytime without unstaking
-- Rewards accumulate based on time staked
-- Unstaking automatically claims all pending rewards
-
-**Important Notes:**
-- NFT is locked in staking contract while staked
-- Cannot trade, breed, or level up staked NFTs
-- Tier bonus based on total staking duration
-- MATIC rewards require contract funding by platform
+---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Wallet (MetaMask recommended)
-- Polygon Amoy testnet MATIC ([Get from faucet](https://faucet.polygon.technology))
-
-### Installation
+### 1. Installation
 
 ```bash
-# Clone repository
 git clone https://github.com/mdlog/evoNFT.git
-cd evoNFT
-
-# Install dependencies for frontend
-cd evonft-app
+cd evoNFT/evonft-app
 npm install
-
-# Setup environment
 cp .env.example .env
-# Edit .env and add your VITE_WALLETCONNECT_PROJECT_ID
-
-# Start development server
+# Add your VITE_WALLETCONNECT_PROJECT_ID to .env
 npm run dev
 ```
 
-Visit `http://localhost:5173`
+### 2. Get Test MATIC
+Visit [Polygon Faucet](https://faucet.polygon.technology) for Amoy testnet MATIC
 
-### Get WalletConnect Project ID
-1. Visit [WalletConnect Cloud](https://cloud.walletconnect.com)
-2. Create new project
-3. Copy Project ID
-4. Add to `.env` file
+### 3. Connect & Play
+- Open http://localhost:5173
+- Connect your wallet (MetaMask, WalletConnect, Coinbase)
+- Mint your first NFT for 0.01 MATIC
 
-## 📋 Environment Variables
+---
 
-```env
-# Contract Addresses (Already Deployed)
-VITE_NFT_CONTRACT=0xe31d18Fb9925f677451845997f64806a88264b3D
-VITE_STAKING_CONTRACT=0xB7d914D84d6b5f21ef53B4B56DCB56508115C838
-VITE_BREEDING_CONTRACT=0x5CcE235E35c7D6bcD0aaca9744e60a0D72cF6250
-VITE_MARKETPLACE_CONTRACT=0x4fe6d4C271300BB796f8F00751aA46f93667D677
+## 💰 Pricing
 
-# WalletConnect (Required)
-VITE_WALLETCONNECT_PROJECT_ID=your_project_id_here
-```
+| Action | Cost | Reward |
+|--------|------|--------|
+| **Mint** | 0.01 MATIC | New NFT |
+| **Feed** | 0.1-1.0 MATIC | +10-500 XP |
+| **Train** | 0.3 MATIC | +1 stat, +100 XP |
+| **Breed** | 0.01 MATIC | New NFT, +50 XP (parents) |
+| **Stake** | Free | 0.01-0.02 MATIC/day |
+| **Evolve** | Free | New appearance |
+| **Trade** | 2.5% fee | MATIC |
 
-## 🎮 How to Use
+---
 
-1. **Connect Wallet** - Click "Connect Wallet" and choose your wallet (MetaMask, WalletConnect, Coinbase)
-2. **Get Test MATIC** - Visit [Polygon Faucet](https://faucet.polygon.technology) for Amoy testnet
-3. **Mint NFT** - Go to Mint page and create your first NFT (0.01 MATIC)
-4. **Train Your NFT** - Select a stat to train (0.3 MATIC) → +1 stat, +100 XP
-5. **Feed Your NFT** - Choose food type (0.1-1.0 MATIC) → +10-500 XP
-6. **Breed NFTs** - Combine 2 NFTs to create offspring (0.01 MATIC, 24h cooldown)
-7. **Stake NFT** - Earn passive rewards: 50-100 XP/day + 0.01-0.02 MATIC/day
-8. **Evolution** - Wait 24h cooldown, then evolve to change appearance (AI-driven, free)
-9. **Trade** - List your NFT for sale or buy from marketplace (2.5% fee)
+## 📊 NFT Stats System
+
+Each NFT has **5 trainable stats** (max 100 each):
+
+- 💪 **Strength** - Physical power
+- 🧠 **Intelligence** - Learning ability
+- ⚡ **Speed** - Agility
+- 🛡️ **Endurance** - Stamina
+- 🍀 **Luck** - Fortune
+
+**Level Up** by gaining XP:
+- Level 1 → 2: 100 XP
+- Level 2 → 3: 250 XP
+- Level 3 → 4: 500 XP
+- Level 4 → 5: 1000 XP
+- Level 5+: +500 XP per level
+
+---
+
+## 🎯 How to Play
+
+### Train Your NFT
+1. Go to "My NFTs"
+2. Click on your NFT
+3. Click "Train" button
+4. Select stat to increase
+5. Pay 0.3 MATIC → Get +1 stat, +100 XP
+
+### Feed Your NFT
+1. Click "Feed" button
+2. Choose food type:
+   - Basic (0.1 MATIC) → +50 XP
+   - Premium (0.5 MATIC) → +200 XP
+   - Legendary (1.0 MATIC) → +500 XP
+
+### Breed NFTs
+1. Go to "Breeding Lab"
+2. Select 2 parent NFTs
+3. Pay 0.01 MATIC
+4. Wait 24h cooldown
+5. Get offspring with inherited traits
+
+### Stake for Rewards
+1. Go to "Staking"
+2. Stake your NFT
+3. Earn rewards based on duration:
+   - 1-7 days: 0.01 MATIC/day
+   - 8-30 days: 0.012 MATIC/day
+   - 31-90 days: 0.015 MATIC/day
+   - 90+ days: 0.02 MATIC/day
+
+### Trade in Marketplace
+1. List your NFT for sale (free)
+2. Set your price
+3. Buyers pay price + 2.5% fee
+4. Instant transfer on purchase
+
+---
+
+## 🔗 Smart Contracts (Verified)
+
+All contracts deployed on **Polygon Amoy Testnet**:
+
+| Contract | Address |
+|----------|---------|
+| **NFT** | [`0xe31d18Fb9925f677451845997f64806a88264b3D`](https://amoy.polygonscan.com/address/0xe31d18Fb9925f677451845997f64806a88264b3D) |
+| **Staking** | [`0xB7d914D84d6b5f21ef53B4B56DCB56508115C838`](https://amoy.polygonscan.com/address/0xB7d914D84d6b5f21ef53B4B56DCB56508115C838) |
+| **Breeding** | [`0x5CcE235E35c7D6bcD0aaca9744e60a0D72cF6250`](https://amoy.polygonscan.com/address/0x5CcE235E35c7D6bcD0aaca9744e60a0D72cF6250) |
+| **Marketplace** | [`0x4fe6d4C271300BB796f8F00751aA46f93667D677`](https://amoy.polygonscan.com/address/0x4fe6d4C271300BB796f8F00751aA46f93667D677) |
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 18, Vite, Tailwind CSS, Framer Motion
+- **Frontend**: React 18, Vite, Tailwind CSS
 - **Web3**: RainbowKit, Wagmi, ethers.js v6
 - **Blockchain**: Polygon Amoy Testnet
 - **Storage**: IPFS (Pinata)
-- **Smart Contracts**: ERC-721, Staking, Breeding, Marketplace
+- **Contracts**: Solidity, Hardhat, OpenZeppelin
 
-## 📁 Project Structure
-
-```
-evonft-app/
-├── src/
-│   ├── components/      # Reusable UI components
-│   ├── pages/          # Page components
-│   ├── hooks/          # Custom React hooks
-│   ├── context/        # React Context (Web3)
-│   ├── config/         # Contract addresses & ABIs
-│   └── services/       # IPFS & contract services
-├── public/             # Static assets
-└── .env               # Environment variables
-```
-
-## 🔗 Smart Contracts
-
-All contracts are deployed on **Polygon Amoy Testnet**:
-
-| Contract | Address | Features | Explorer |
-|----------|---------|----------|----------|
-| **NFT** | `0xe31d18Fb9925f677451845997f64806a88264b3D` | Mint, Feed, Train, Evolution | [View](https://amoy.polygonscan.com/address/0xe31d18Fb9925f677451845997f64806a88264b3D) |
-| **Staking** | `0xB7d914D84d6b5f21ef53B4B56DCB56508115C838` | Stake, Claim, Tier Bonuses | [View](https://amoy.polygonscan.com/address/0xB7d914D84d6b5f21ef53B4B56DCB56508115C838) |
-| **Breeding** | `0x5CcE235E35c7D6bcD0aaca9744e60a0D72cF6250` | Breed, Cooldown, Trait Inheritance | [View](https://amoy.polygonscan.com/address/0x5CcE235E35c7D6bcD0aaca9744e60a0D72cF6250) |
-| **Marketplace** | `0x4fe6d4C271300BB796f8F00751aA46f93667D677` | List, Buy, Cancel, 2.5% Fee | [View](https://amoy.polygonscan.com/address/0x4fe6d4C271300BB796f8F00751aA46f93667D677) |
-
-### Contract Features
-
-**NFT Contract (EvolvableNFT.sol):**
-- ✅ ERC-721 standard
-- ✅ Dynamic stats (Health, Strength, Intelligence)
-- ✅ XP and level system
-- ✅ Evolution with version tracking
-- ✅ 24-hour evolution cooldown
-- ✅ EIP-712 signature verification
-- ✅ IPFS metadata storage
-
-**Staking Contract (StakingPool.sol):**
-- ✅ Stake/Unstake NFTs
-- ✅ Real-time reward calculation
-- ✅ 4-tier bonus system (Bronze → Diamond)
-- ✅ XP + MATIC dual rewards
-- ✅ Batch operations support
-- ✅ Emergency withdraw (owner)
-
-**Breeding Contract (NFTBreeding.sol):**
-- ✅ Combine 2 parent NFTs
-- ✅ Trait inheritance system
-- ✅ 24-hour cooldown per NFT
-- ✅ Breeding cost: 0.01 MATIC
-- ✅ Parent XP bonus: +50 XP each
-- ✅ Minter role integration
-
-**Marketplace Contract (NFTMarketplace.sol):**
-- ✅ List NFTs for sale
-- ✅ Buy with instant transfer
-- ✅ Cancel listings anytime
-- ✅ 2.5% platform fee
-- ✅ Secure approval flow
-- ✅ Volume tracking
+---
 
 ## 🐛 Troubleshooting
 
 **Wallet won't connect?**
-- Ensure MetaMask is installed
+- Install MetaMask
 - Switch to Polygon Amoy network
-- Clear browser cache
+- Refresh page
 
 **Transaction failed?**
-- Check MATIC balance (need for gas fees)
-- Ensure you're on Polygon Amoy network
-- Try increasing gas limit
+- Check MATIC balance
+- Ensure correct network
+- Check console for errors
 
 **NFT not showing?**
-- Wait for blockchain confirmation (~10-30 seconds)
-- Refresh the page
-- Check transaction on [PolygonScan](https://amoy.polygonscan.com)
-
-**Staking issues?**
-- Ensure NFT is not already staked
-- Check if you approved the NFT first
-- Verify staking contract has MATIC for rewards
-- Cannot stake NFTs listed on marketplace
-
-**Evolution not working?**
-- Check if 24-hour cooldown has passed
-- Evolution requires AI backend signature
-- "Evolve Now" button only shows when ready
-- Only owner can evolve their NFTs
-
-**Breeding failed?**
-- Both parents must be owned by you
-- Check 24-hour cooldown per NFT
-- Ensure you have 0.01 MATIC for breeding cost
-- Parents must not be staked or listed for sale
+- Wait 30 seconds for confirmation
+- Refresh page
+- Check transaction on PolygonScan
 
 **Training failed?**
-- Ensure you own the NFT
-- Check if stat is already at max (100)
-- Verify you have at least 0.35 MATIC (0.3 + gas)
-- NFT must not be staked or listed for sale
-- Check browser console for detailed error messages
+- Verify you own the NFT
+- Check stat not maxed (100)
+- Need 0.35 MATIC (0.3 + gas)
 
-## 🎯 Advanced Features
-
-### Real-Time Data
-- ✅ All stats fetched from blockchain
-- ✅ Auto-refresh every 30 seconds
-- ✅ Live countdown timers
-- ✅ Real-time reward calculation
-- ✅ Instant transaction feedback
-
-### Security
-- ✅ EIP-712 signature verification (Evolution)
-- ✅ ReentrancyGuard on all contracts
-- ✅ Proper access control (Ownable)
-- ✅ Secure approval flows
-- ✅ Verified contracts on PolygonScan
-
-### User Experience
-- ✅ Smooth animations (Framer Motion)
-- ✅ Loading states and skeletons
-- ✅ Error handling with clear messages
-- ✅ Mobile-responsive design
-- ✅ Multi-wallet support (RainbowKit)
-
-### Performance
-- ✅ Optimized RPC calls
-- ✅ Efficient state management
-- ✅ IPFS gateway fallbacks
-- ✅ Cached blockchain data
-- ✅ Fast page loads (<3s)
-
-## 📊 Platform Economics
-
-### Revenue Sources
-- Mint Fee: 0.01 MATIC per NFT
-- Marketplace Fee: 2.5% of sales
-- Breeding Fee: 0.01 MATIC per breed
-- Feed: 0.1-1.0 MATIC (Basic/Premium/Legendary)
-- Train: 0.3 MATIC per training session
-
-### Reward Distribution
-- Staking rewards funded by platform revenue
-- XP calculated automatically (no cost)
-- MATIC rewards from contract balance
-- Sustainable tokenomics model
+---
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
-
-## 🙏 Acknowledgments
-
-Built with:
-- [Polygon](https://polygon.technology) - Layer 2 scaling solution
-- [RainbowKit](https://www.rainbowkit.com) - Wallet connection UI
-- [Wagmi](https://wagmi.sh) - React hooks for Ethereum
-- [IPFS](https://ipfs.tech) - Decentralized storage
-
-## 📖 Quick Reference
-
-### Action Costs
-
-| Action | Cost | Cooldown | Rewards |
-|--------|------|----------|---------|
-| Mint NFT | 0.01 MATIC | None | New NFT |
-| Feed | 0.1-1.0 MATIC | None | +10-500 XP (food type) |
-| Train | 0.3 MATIC | None | +1 stat, +100 XP |
-| Breed | 0.01 MATIC | 24 hours | New NFT, +50 XP (parents) |
-| Stake | Free | None | 50-100 XP/day + MATIC |
-| Evolve | Free | 24 hours | New appearance, version++ |
-| List for Sale | Free | None | - |
-| Buy NFT | Price + 2.5% | None | NFT ownership |
-
-### XP Requirements
-
-| Level | XP Needed | Total XP | Unlock |
-|-------|-----------|----------|--------|
-| 1 → 2 | 100 XP | 100 | Basic training |
-| 2 → 3 | 150 XP | 250 | Breeding available |
-| 3 → 4 | 250 XP | 500 | Advanced stats |
-| 4 → 5 | 500 XP | 1000 | Elite status |
-| 5 → 6 | 500 XP | 1500 | Master tier |
-
-### Staking Tiers
-
-| Tier | Duration | Bonus | XP/Day | MATIC/Day |
-|------|----------|-------|--------|-----------|
-| 🥉 Bronze | 1-7 days | 0% | 50 | 0.01 |
-| 🥈 Silver | 8-30 days | +20% | 60 | 0.012 |
-| 🥇 Gold | 31-90 days | +50% | 75 | 0.015 |
-| 💎 Diamond | 90+ days | +100% | 100 | 0.02 |
-
-### Rarity Distribution
-
-| Rarity | Base Stats | Breeding Bonus | Market Value |
-|--------|------------|----------------|--------------|
-| ⚪ Common | 10-20 | Standard | 💰 |
-| 🟢 Uncommon | 21-35 | +5% | 💰💰 |
-| 🔵 Rare | 36-50 | +10% | 💰💰💰 |
-| 🟣 Epic | 51-70 | +15% | 💰💰💰💰 |
-| 🟠 Legendary | 71-90 | +25% | 💰💰💰💰💰 |
-| 🔴 Mythic | 91-100 | +50% | 💰💰💰💰💰💰 |
+MIT License - see [LICENSE](LICENSE) file
 
 ---
 
