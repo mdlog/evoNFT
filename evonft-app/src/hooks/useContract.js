@@ -405,7 +405,7 @@ export function useContractStats() {
 
     useEffect(() => {
         if (!contract) {
-            console.warn('⚠️ Contract not initialized');
+            setLoading(true);
             return;
         }
 
