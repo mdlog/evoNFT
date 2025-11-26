@@ -142,8 +142,14 @@ contract EvolvableNFTExtended is EvolvableNFT {
      * @notice Calculate XP required for level
      */
     function _getXPForLevel(uint256 level) internal pure returns (uint256) {
-        // XP = level * 1000
-        return level * 1000;
+        // Level progression: 1->2: 100, 2->3: 250, 3->4: 500, 4->5: 1000, 5+: +500
+        if (level == 1) return 0;
+        if (level == 2) return 100;
+        if (level == 3) return 250;
+        if (level == 4) return 500;
+        if (level == 5) return 1000;
+        // Level 6+: 1000 + (level - 5) * 500
+        return 1000 + ((level - 5) * 500);
     }
     
     // ============ View Functions ============
