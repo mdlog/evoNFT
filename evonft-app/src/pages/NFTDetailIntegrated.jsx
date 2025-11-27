@@ -110,7 +110,12 @@ export default function NFTDetail() {
 
     // Check ownership and listing status
     const isOwner = account && displayNFT && account.toLowerCase() === displayNFT.owner?.toLowerCase()
+    
+    // Check listing status
     const isListed = listing?.active
+    
+    // Check ownership
+    const isActualOwner = account && displayNFT.owner && account.toLowerCase() === displayNFT.owner.toLowerCase()
 
     // Get level from attributes or progress
     const level = progress?.currentLevel || displayNFT.attributes?.find(a => a.trait_type === 'level')?.value || 1
@@ -232,7 +237,7 @@ export default function NFTDetail() {
                         <div className="space-y-6">
                             <div>
                                 <h1 className="text-4xl font-bold mb-2">{displayNFT.name}</h1>
-                                <p className="text-slate-400">Owned by: You</p>
+                                <p className="text-slate-400">Owned by: {isActualOwner ? 'You' : `${displayNFT.owner?.slice(0,6)}...${displayNFT.owner?.slice(-4)}`}</p>
                             </div>
 
                             {/* Level & XP */}
@@ -265,9 +270,38 @@ export default function NFTDetail() {
                                 </div>
                             )}
 
+                            {/* Marketplace Status */}
+                            {isListed && (
+                                <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-green-400 font-semibold">💰 Listed for Sale</span>
+                                        <span className="text-2xl font-bold text-green-400">{listing.price} MATIC</span>
+                                    </div>
+                                    {!isActualOwner && (
+                                        <button 
+                                            onClick={() => setShowBuyModal(true)}
+                                            className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg font-bold transition-all"
+                                        >
+                                            🛒 Buy Now for {listing.price} MATIC
+                                        </button>
+                                    )}
+                                    {isActualOwner && (
+                                        <div className="text-center text-green-300 py-2">
+                                            You own this NFT
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {!isListed && (
+                                <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-4 text-center mb-4">
+                                    <span className="text-slate-400">This NFT is not for sale</span>
+                                </div>
+                            )}
+
                             {/* Quick Actions */}
                             <div className="grid grid-cols-2 gap-3">
-                                {isOwner && !isListed && (
+                                {isActualOwner && !isListed && (
                                     <>
                                         <button
                                             onClick={() => setShowFeedModal(true)}
@@ -296,7 +330,7 @@ export default function NFTDetail() {
                                     </>
                                 )}
 
-                                {isOwner && isListed && (
+                                {isActualOwner && isListed && (
                                     <button
                                         onClick={async () => {
                                             if (confirm('Cancel listing?')) {
@@ -317,20 +351,7 @@ export default function NFTDetail() {
                                     </button>
                                 )}
 
-                                {!isOwner && isListed && (
-                                    <button
-                                        onClick={() => setShowBuyModal(true)}
-                                        className="col-span-2 px-6 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 rounded-xl font-semibold transition-all hover:scale-105 text-lg"
-                                    >
-                                        🛒 Buy for {listing.price} MATIC
-                                    </button>
-                                )}
 
-                                {!isOwner && !isListed && (
-                                    <div className="col-span-2 text-center py-4 glass-strong rounded-xl border border-slate-700">
-                                        <p className="text-slate-400">This NFT is not for sale</p>
-                                    </div>
-                                )}
                             </div>
 
                             {/* Stats */}
@@ -671,7 +692,7 @@ export default function NFTDetail() {
                 onClose={() => {
                     setShowBuyModal(false);
                 }}
-                nft={nft}
+                nft={displayNFT}
                 listing={listing}
                 onSuccess={() => {
                     globalThis.location.reload();

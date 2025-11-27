@@ -32,6 +32,12 @@ export function useAllNFTsFast() {
             try {
                 console.log('⚡ Loading NFTs (ultra-fast mode)...');
                 console.log('📍 Contract:', CONTRACT_ADDRESS);
+                
+                if (!CONTRACT_ADDRESS) {
+                    console.error('❌ CONTRACT_ADDRESS is empty!');
+                    setLoading(false);
+                    return;
+                }
 
                 const startTime = Date.now();
                 setLoading(true);
@@ -135,7 +141,15 @@ export function useAllNFTsFast() {
 
             } catch (error) {
                 console.error('❌ Error loading NFTs:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    code: error.code,
+                    contractAddress: CONTRACT_ADDRESS
+                });
                 setLoading(false);
+                // Set empty array instead of leaving undefined
+                setNfts([]);
+                setTotalMinted(0);
             }
         }
 

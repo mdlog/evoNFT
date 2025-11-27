@@ -31,16 +31,9 @@ export default function BuyNFTModal({ isOpen, onClose, nft, listing, onSuccess }
                 throw new Error('Price data is missing');
             }
 
-            // Check balance
-            const balance = await marketplaceContract.runner.provider.getBalance(
-                await marketplaceContract.runner.getAddress()
-            );
-            console.log('💰 Your balance:', ethers.formatEther(balance), 'MATIC');
+            // Skip balance check due to RPC issues
             console.log('💵 Required:', listing.price, 'MATIC');
-
-            if (balance < listing.priceWei) {
-                throw new Error('Insufficient MATIC balance');
-            }
+            console.log('💰 Skipping balance check to avoid RPC error');
 
             // Send transaction
             console.log('📤 Sending transaction...');

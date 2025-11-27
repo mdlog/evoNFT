@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { ethers } from 'ethers'
 import { NFTVisual } from '../components/NFTVisual'
 import { useAllNFTsFast } from '../hooks/useAllNFTsFast'
 import { useNFTVisuals, useNFTVisual } from '../hooks/useNFTVisuals'
@@ -12,6 +13,7 @@ import { rarityLevels } from '../assets/nft-visuals'
 // Component wrapper for BuyNFTModal with listing data
 function BuyNFTModalWithListing({ isOpen, onClose, nft, onSuccess }) {
     const { listing } = useListing(nft?.id);
+    
     return (
         <BuyNFTModal
             isOpen={isOpen}
@@ -37,6 +39,15 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect, currentAc
 
     // Check if listed - use listing existence as source of truth
     const isListed = !!listing && listing.active !== false
+    
+    // Check if listed
+    const finalIsListed = isListed
+    const finalListing = listing
+
+    // Get owner address and check if current user is owner
+    const ownerAddress = displayNFT.owner || nft.owner
+    const isCurrentUserOwner = currentAccount && ownerAddress && 
+        currentAccount.toLowerCase() === ownerAddress.toLowerCase()
 
     // Debug logging for NFT #2
     if (nft.id == 2) {
@@ -54,11 +65,6 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect, currentAc
             allListingIds: listings.map(l => Number(l.tokenId))
         });
     }
-
-    // Get owner address and check if current user is owner
-    const ownerAddress = displayNFT.owner || nft.owner
-    const isCurrentUserOwner = currentAccount && ownerAddress && 
-        currentAccount.toLowerCase() === ownerAddress.toLowerCase()
 
     // Normalize rarity
     let rarity = displayNFT.rarity || 'common'
@@ -120,14 +126,7 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect, currentAc
                         {/* Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                        {/* FOR SALE Badge - Most prominent */}
-                        {isListed && (
-                            <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-20">
-                                <div className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full text-sm font-bold shadow-xl border-2 border-white/20 animate-pulse">
-                                    💰 FOR SALE
-                                </div>
-                            </div>
-                        )}
+
 
                         {/* Level Badge */}
                         <div className="absolute top-3 right-3">
@@ -181,12 +180,12 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect, currentAc
 
                         {/* Listing Status */}
                         <div className="pt-2 border-t border-slate-700/50">
-                            {isListed && listing ? (
+                            {finalIsListed && finalListing ? (
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-slate-400">Price:</span>
                                         <span className="text-lg font-bold text-primary-400">
-                                            {listing.price} MATIC
+                                            {finalListing.price} MATIC
                                         </span>
                                     </div>
                                     {isCurrentUserOwner ? (
@@ -197,6 +196,7 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect, currentAc
                                         <button
                                             onClick={(e) => {
                                                 e.preventDefault();
+                                                e.stopPropagation();
                                                 onSelect();
                                             }}
                                             className="w-full px-4 py-2.5 bg-gradient-to-r from-secondary-500 to-accent-500 hover:from-secondary-600 hover:to-accent-600 rounded-lg font-bold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
@@ -209,11 +209,6 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect, currentAc
                             ) : (
                                 <div className="text-center text-sm text-slate-500 py-2">
                                     Not for sale
-                                    {nft.id == 2 && (
-                                        <div className="text-xs text-red-400 mt-1">
-                                            DEBUG: Should be listed!
-                                        </div>
-                                    )}
                                 </div>
                             )}
                         </div>
@@ -240,18 +235,23 @@ export default function Marketplace() {
     const { listings: activeListings, loading: listingsLoading } = useListings()
     const { stats: marketplaceStats } = useMarketplace()
 
-    // Debug: Log listings
-    console.log('📊 Marketplace Data:', {
-        totalNFTs: rawNFTs.length,
-        activeListings: activeListings.length,
-        listings: activeListings,
-        listingTokenIds: activeListings.map(l => l.tokenId)
-    })
-
     // Generate visuals for NFTs
     const { visualNFTs, loading: visualsLoading } = useNFTVisuals(rawNFTs)
 
     const loading = nftsLoading || visualsLoading || listingsLoading
+
+    // Debug: Log marketplace data
+    console.log('📊 Marketplace Debug:', {
+        totalNFTs: rawNFTs.length,
+        nftsLoading,
+        visualsLoading,
+        listingsLoading,
+        loading,
+        activeListings: activeListings.length,
+        listings: activeListings,
+        listingTokenIds: activeListings.map(l => l.tokenId),
+        visualNFTs: visualNFTs.length
+    })
 
     // Get listed token IDs as Set for faster lookup
     const listedTokenIds = useMemo(() => {
@@ -393,7 +393,29 @@ export default function Marketplace() {
                         <div className="animate-spin text-6xl mb-4">⟳</div>
                         <h3 className="text-xl font-semibold mb-2">Loading NFTs...</h3>
                         <p className="text-slate-400">Fetching data from blockchain</p>
+                        <div className="mt-4 text-sm text-slate-500">
+                            <div>NFTs: {nftsLoading ? 'Loading...' : '✓ Loaded'}</div>
+                            <div>Visuals: {visualsLoading ? 'Loading...' : '✓ Loaded'}</div>
+                            <div>Listings: {listingsLoading ? 'Loading...' : '✓ Loaded'}</div>
+                        </div>
                     </div>
+                ) : rawNFTs.length === 0 ? (
+                    /* No NFTs minted yet */
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-20"
+                    >
+                        <div className="text-6xl mb-4">📦</div>
+                        <h3 className="text-xl font-semibold mb-2">No NFTs Minted Yet</h3>
+                        <p className="text-slate-400 mb-6">Be the first to mint an EvoNFT!</p>
+                        <button
+                            onClick={() => globalThis.location.href = '/mint'}
+                            className="px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-xl font-semibold transition-all"
+                        >
+                            Mint NFT
+                        </button>
+                    </motion.div>
                 ) : filteredNFTs.length === 0 ? (
                     /* Empty State */
                     <motion.div
@@ -443,6 +465,7 @@ export default function Marketplace() {
                                 listings={activeListings}
                                 currentAccount={account}
                                 onSelect={() => {
+                                    console.log('🛒 Buy button clicked for NFT:', nft.id);
                                     setSelectedNFT(nft);
                                     setShowBuyModal(true);
                                 }}
@@ -457,6 +480,7 @@ export default function Marketplace() {
                 <BuyNFTModalWithListing
                     isOpen={showBuyModal}
                     onClose={() => {
+                        console.log('🚪 Closing buy modal');
                         setShowBuyModal(false);
                         setSelectedNFT(null);
                     }}
