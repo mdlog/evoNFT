@@ -189,16 +189,22 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect, currentAc
                                             {listing.price} MATIC
                                         </span>
                                     </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            onSelect();
-                                        }}
-                                        className="w-full px-4 py-2.5 bg-gradient-to-r from-secondary-500 to-accent-500 hover:from-secondary-600 hover:to-accent-600 rounded-lg font-bold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
-                                    >
-                                        <span className="text-lg">🛒</span>
-                                        <span>Buy Now</span>
-                                    </button>
+                                    {isCurrentUserOwner ? (
+                                        <div className="text-center text-sm text-slate-400 py-2">
+                                            💼 You own this NFT
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                onSelect();
+                                            }}
+                                            className="w-full px-4 py-2.5 bg-gradient-to-r from-secondary-500 to-accent-500 hover:from-secondary-600 hover:to-accent-600 rounded-lg font-bold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
+                                        >
+                                            <span className="text-lg">🛒</span>
+                                            <span>Buy Now</span>
+                                        </button>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-center text-sm text-slate-500 py-2">
