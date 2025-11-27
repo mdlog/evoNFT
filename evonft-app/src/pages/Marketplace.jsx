@@ -5,6 +5,7 @@ import { NFTVisual } from '../components/NFTVisual'
 import { useAllNFTsFast } from '../hooks/useAllNFTsFast'
 import { useNFTVisuals, useNFTVisual } from '../hooks/useNFTVisuals'
 import { useListings, useMarketplace, useListing } from '../hooks/useMarketplace'
+import { useWeb3 } from '../context/RainbowWeb3Context'
 import BuyNFTModal from '../components/BuyNFTModal'
 import { rarityLevels } from '../assets/nft-visuals'
 
@@ -23,7 +24,7 @@ function BuyNFTModalWithListing({ isOpen, onClose, nft, onSuccess }) {
 }
 
 // NFT Card with listing badge
-function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect }) {
+function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect, currentAccount }) {
     const visualData = useNFTVisual(nft)
     const displayNFT = visualData || nft
 
@@ -46,13 +47,18 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect }) {
             hasListing: !!listing,
             listingPrice: listing?.price,
             listingActive: listing?.active,
+            ownerAddress,
+            currentAccount,
+            isCurrentUserOwner,
             allListings: listings,
             allListingIds: listings.map(l => Number(l.tokenId))
         });
     }
 
-    // Get owner address
+    // Get owner address and check if current user is owner
     const ownerAddress = displayNFT.owner || nft.owner
+    const isCurrentUserOwner = currentAccount && ownerAddress && 
+        currentAccount.toLowerCase() === ownerAddress.toLowerCase()
 
     // Normalize rarity
     let rarity = displayNFT.rarity || 'common'
@@ -217,6 +223,9 @@ export default function Marketplace() {
     const [showBuyModal, setShowBuyModal] = useState(false)
     const [selectedNFT, setSelectedNFT] = useState(null)
     const [filterType, setFilterType] = useState('all') // 'all', 'listed', 'not-listed' - default to 'all' to show everything
+
+    // Get current user account
+    const { account } = useWeb3()
 
     // Get all NFTs from blockchain (fast mode)
     const { nfts: rawNFTs, loading: nftsLoading } = useAllNFTsFast()
@@ -426,6 +435,7 @@ export default function Marketplace() {
                                 nft={nft}
                                 listedTokenIds={listedTokenIds}
                                 listings={activeListings}
+                                currentAccount={account}
                                 onSelect={() => {
                                     setSelectedNFT(nft);
                                     setShowBuyModal(true);
