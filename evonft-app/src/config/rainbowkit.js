@@ -1,11 +1,16 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { polygonAmoy, polygon } from 'wagmi/chains';
+import { http } from 'wagmi';
 
-// RainbowKit Configuration
+// RainbowKit Configuration with custom RPC
 export const config = getDefaultConfig({
     appName: 'EvoNFT',
-    projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_WALLETCONNECT_PROJECT_ID', // Get from https://cloud.walletconnect.com
+    projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_WALLETCONNECT_PROJECT_ID',
     chains: [polygonAmoy, polygon],
+    transports: {
+        [polygonAmoy.id]: http('https://api.zan.top/polygon-amoy'),
+        [polygon.id]: http(),
+    },
     ssr: false,
 });
 

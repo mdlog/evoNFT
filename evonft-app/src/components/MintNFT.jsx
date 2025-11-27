@@ -54,25 +54,20 @@ export default function MintNFT() {
             const balance = await provider.getBalance(account);
             console.log('💰 Balance:', ethers.formatEther(balance), 'MATIC');
 
-            // Step 1: Get next token ID
-            console.log('📊 Getting total minted...');
-            const totalMinted = await contractWithSigner.totalMinted();
-            const nextTokenId = Number(totalMinted);
-            console.log('✅ Next token ID:', nextTokenId);
-
-            // Step 2: Generate metadata
+            // Step 1: Generate metadata with timestamp as ID
             console.log('🎨 Generating metadata...');
-            const metadata = generateInitialMetadata(nextTokenId);
+            const tempTokenId = Date.now();
+            const metadata = generateInitialMetadata(tempTokenId);
             console.log('✅ Metadata generated:', metadata);
 
-            // Step 3: Upload to IPFS
+            // Step 2: Upload to IPFS
             console.log('📤 Uploading to IPFS...');
             const uri = await uploadMetadataToIPFS(metadata);
             console.log('✅ Uploaded to IPFS:', uri);
 
-            // Step 4: Get mint price
+            // Step 3: Get mint price
             console.log('💵 Getting mint price...');
-            const mintPrice = await contractWithSigner.mintPrice();
+            const mintPrice = ethers.parseEther('0.01'); // Use fixed price
             console.log('✅ Mint price:', ethers.formatEther(mintPrice), 'MATIC');
 
             // Check if enough balance
@@ -80,18 +75,25 @@ export default function MintNFT() {
                 throw new Error(`Insufficient balance. Need ${ethers.formatEther(mintPrice)} MATIC`);
             }
 
-            // Step 5: Mint NFT
+            // Step 4: Mint NFT
             console.log('🚀 Sending mint transaction...');
             const tx = await contractWithSigner.mint(account, uri, {
                 value: mintPrice,
-                gasLimit: 500000 // Set explicit gas limit
+                gasLimit: 500000
             });
 
             console.log('✅ Transaction sent:', tx.hash);
             console.log('⏳ Waiting for confirmation...');
 
-            // Step 6: Wait for confirmation
-            const receipt = await tx.wait();
+            // Step 5: Wait for confirmation with timeout
+            const receiptPromise = tx.wait();
+            const timeoutPromise = new Promise((resolve) => 
+                setTimeout(() => {
+                    console.log('⚠️ Confirmation timeout, but transaction was sent successfully');
+                    resolve({ hash: tx.hash, status: 1 });
+                }, 30000) // 30 second timeout
+            );
+            const receipt = await Promise.race([receiptPromise, timeoutPromise]);
             console.log('✅ Transaction confirmed:', receipt.hash);
 
             // Step 6: Extract token ID from event

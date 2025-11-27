@@ -199,7 +199,7 @@ export default function Marketplace() {
     const [searchTerm, setSearchTerm] = useState('')
     const [showBuyModal, setShowBuyModal] = useState(false)
     const [selectedNFT, setSelectedNFT] = useState(null)
-    const [filterType, setFilterType] = useState('all') // 'all', 'listed', 'not-listed'
+    const [filterType, setFilterType] = useState('all') // 'all', 'listed', 'not-listed' - default to 'all' to show everything
 
     // Get all NFTs from blockchain (fast mode)
     const { nfts: rawNFTs, loading: nftsLoading } = useAllNFTsFast()

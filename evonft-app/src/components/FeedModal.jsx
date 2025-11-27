@@ -6,6 +6,7 @@ import { ethers } from 'ethers';
 export default function FeedModal({ isOpen, onClose, tokenId, nftName, onSuccess }) {
     const { contractWithSigner } = useNFTExtended();
     const [feeding, setFeeding] = useState(false);
+    const [feedingStatus, setFeedingStatus] = useState('');
     const [selectedFood, setSelectedFood] = useState(null);
 
     const foodOptions = [
@@ -43,26 +44,29 @@ export default function FeedModal({ isOpen, onClose, tokenId, nftName, onSuccess
 
         try {
             setFeeding(true);
+            setFeedingStatus('Sending transaction...');
 
+            // Add gas limit to avoid estimation issues
             const tx = await contractWithSigner.feed(tokenId, selectedFood.type, {
-                value: ethers.parseEther(selectedFood.price)
+                value: ethers.parseEther(selectedFood.price),
+                gasLimit: 200000 // Set manual gas limit
             });
 
             console.log('Feed transaction sent:', tx.hash);
+            setFeedingStatus(`Waiting for confirmation...\nTx: ${tx.hash.slice(0, 10)}...`);
+            
             const receipt = await tx.wait();
             console.log('Feed transaction confirmed:', receipt);
 
-            // Success feedback
-            alert(`Successfully fed ${nftName} with ${selectedFood.name}! +${selectedFood.xp} XP gained!\n\nRefreshing NFT data...`);
-
-            // Wait a bit for blockchain to update
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            setFeedingStatus('✅ Success! Updating data...');
 
             // Call onSuccess callback if provided
             if (onSuccess) {
                 onSuccess();
             }
 
+            // Show success for 1 second then close
+            await new Promise(resolve => setTimeout(resolve, 1000));
             onClose();
 
         } catch (error) {
@@ -79,6 +83,8 @@ export default function FeedModal({ isOpen, onClose, tokenId, nftName, onSuccess
                 errorMessage = '🚫 Not Owner\n\nYou are not the owner of this NFT.';
             } else if (error.message.includes('ERC721: invalid token ID')) {
                 errorMessage = `🚫 NFT Not Found\n\nNFT #${tokenId} does not exist.`;
+            } else if (error.message.includes('missing revert data') || error.code === 'CALL_EXCEPTION') {
+                errorMessage = '⚠️ RPC Connection Issue\n\nMetaMask RPC is timing out.\n\nPlease:\n1. Change MetaMask RPC to: https://rpc-amoy.polygon.technology/\n2. Or try again in a few seconds';
             } else if (error.reason) {
                 errorMessage = `❌ Contract Error\n\n${error.reason}`;
             } else {
@@ -88,6 +94,7 @@ export default function FeedModal({ isOpen, onClose, tokenId, nftName, onSuccess
             alert(errorMessage);
         } finally {
             setFeeding(false);
+            setFeedingStatus('');
         }
     }
 
@@ -189,9 +196,12 @@ export default function FeedModal({ isOpen, onClose, tokenId, nftName, onSuccess
                             className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {feeding ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <span className="animate-spin">⟳</span>
-                                    Feeding...
+                                <span className="flex flex-col items-center justify-center gap-1">
+                                    <span className="flex items-center gap-2">
+                                        <span className="animate-spin">⟳</span>
+                                        {feedingStatus.includes('✅') ? 'Success!' : 'Processing...'}
+                                    </span>
+                                    <span className="text-xs opacity-80 whitespace-pre-line">{feedingStatus}</span>
                                 </span>
                             ) : (
                                 `Feed ${selectedFood ? selectedFood.name : 'NFT'}`

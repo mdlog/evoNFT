@@ -104,6 +104,7 @@ export function useListing(tokenId) {
 
 /**
  * Hook for All Active Listings
+ * Strategy: Query all minted NFTs from NFT contract, then check marketplace status
  */
 export function useListings() {
     const { contract } = useMarketplace();
@@ -116,56 +117,73 @@ export function useListings() {
         async function loadListings() {
             try {
                 console.log('📋 Loading all listings...');
-                console.log('   Contract address:', contract.target || contract.address);
+                console.log('   Marketplace Contract:', contract.target || contract.address);
 
-                // Strategy: Get all active listings by checking contract state
-                // This is more reliable than relying on events
                 const activeListings = [];
 
-                // Query events and check each one
-                console.log('   Using event-based approach to find listings...');
+                // Get NFT contract address from marketplace
+                const nftContractAddress = await contract.nftContract();
+                console.log('   NFT Contract:', nftContractAddress);
 
-                // Get current block
-                const currentBlock = await contract.runner.provider.getBlockNumber();
-                console.log('   Current block:', currentBlock);
+                // Create NFT contract instance
+                const nftContract = new ethers.Contract(
+                    nftContractAddress,
+                    [
+                        'function totalSupply() view returns (uint256)',
+                        'function tokenByIndex(uint256 index) view returns (uint256)',
+                        'function ownerOf(uint256 tokenId) view returns (address)'
+                    ],
+                    contract.runner
+                );
 
-                // Try to query from deployment block or last 50000 blocks
-                const fromBlock = Math.max(0, currentBlock - 50000);
-                console.log('   Querying from block:', fromBlock, 'to', currentBlock);
+                // Get total supply of NFTs
+                const totalSupply = await nftContract.totalSupply();
+                const totalNFTs = Number(totalSupply);
+                console.log(`   Total NFTs minted: ${totalNFTs}`);
 
-                // Get Listed events
-                const filter = contract.filters.Listed();
-                const events = await contract.queryFilter(filter, fromBlock, currentBlock);
-                console.log(`   ✅ Found ${events.length} listing events`);
+                if (totalNFTs === 0) {
+                    console.log('   ℹ️ No NFTs minted yet');
+                    setListings([]);
+                    setLoading(false);
+                    return;
+                }
 
-                // Get unique token IDs from events
-                const tokenIds = [...new Set(events.map(e => Number(e.args.tokenId)))];
-                console.log(`   Checking ${tokenIds.length} unique tokens...`);
+                // Check each NFT if it's listed
+                console.log(`   Checking ${totalNFTs} NFTs for listings...`);
 
-                // Check which listings are still active
-                for (const tokenId of tokenIds) {
+                for (let i = 0; i < totalNFTs; i++) {
                     try {
-                        const isListed = await contract.isListed(tokenId);
+                        // Get token ID at index
+                        const tokenId = await nftContract.tokenByIndex(i);
+                        const tokenIdNum = Number(tokenId);
+
+                        // Check if listed in marketplace
+                        const isListed = await contract.isListed(tokenIdNum);
 
                         if (isListed) {
-                            const listingData = await contract.getListing(tokenId);
+                            // Get listing details
+                            const listingData = await contract.getListing(tokenIdNum);
                             const listing = {
-                                tokenId,
+                                tokenId: tokenIdNum,
                                 seller: listingData[0],
                                 price: ethers.formatEther(listingData[1]),
                                 priceWei: listingData[1],
                                 listedAt: Number(listingData[2]),
                                 active: listingData[3]
                             };
-                            activeListings.push(listing);
-                            console.log(`   ✅ Token ${tokenId} is listed:`, listing.price, 'MATIC');
+
+                            // Only add if still active
+                            if (listing.active) {
+                                activeListings.push(listing);
+                                console.log(`   ✅ NFT #${tokenIdNum} listed for ${listing.price} MATIC`);
+                            }
                         }
                     } catch (err) {
-                        console.warn(`   ⚠️ Error checking token ${tokenId}:`, err.message);
+                        console.warn(`   ⚠️ Error checking NFT at index ${i}:`, err.message);
                     }
                 }
 
-                console.log(`   ✅ Total active listings: ${activeListings.length}`);
+                console.log(`   ✅ Found ${activeListings.length} active listings`);
                 setListings(activeListings);
                 setLoading(false);
 

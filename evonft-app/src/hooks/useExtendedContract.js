@@ -10,6 +10,10 @@ import {
     BREEDING_ABI
 } from '../config/contractsExtended';
 
+// Fallback RPC provider
+const FALLBACK_RPC = 'https://rpc-amoy.polygon.technology';
+const fallbackProvider = new ethers.JsonRpcProvider(FALLBACK_RPC);
+
 /**
  * Hook untuk NFT Extended Contract
  */
@@ -21,11 +25,17 @@ export function useNFTExtended() {
     useEffect(() => {
         if (!NFT_CONTRACT) return;
 
+        // Always create read-only contract with fallback provider
+        const readContract = new ethers.Contract(NFT_CONTRACT, NFT_ABI, fallbackProvider);
+        setContract(readContract);
+
+        // Create contract with provider if available
         if (provider) {
-            const readContract = new ethers.Contract(NFT_CONTRACT, NFT_ABI, provider);
-            setContract(readContract);
+            const providerContract = new ethers.Contract(NFT_CONTRACT, NFT_ABI, provider);
+            setContract(providerContract);
         }
 
+        // Create contract with signer if available
         if (signer) {
             const writeContract = new ethers.Contract(NFT_CONTRACT, NFT_ABI, signer);
             setContractWithSigner(writeContract);
@@ -51,18 +61,14 @@ export function useStaking() {
             return;
         }
 
-        console.log('🔧 Initializing Staking Contract:', STAKING_CONTRACT);
-
         if (provider) {
             const readContract = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, provider);
             setContract(readContract);
-            console.log('✅ Staking read contract initialized');
         }
 
         if (signer) {
             const writeContract = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
             setContractWithSigner(writeContract);
-            console.log('✅ Staking write contract initialized');
         }
     }, [provider, signer]);
 
@@ -71,9 +77,7 @@ export function useStaking() {
 
         async function loadStakes() {
             try {
-                console.log('🔍 Loading user stakes for:', account);
                 const stakes = await contract.getUserStakes(account);
-                console.log('✅ User stakes loaded:', stakes.map(s => Number(s)));
                 setUserStakes(stakes.map(s => Number(s)));
                 setLoading(false);
             } catch (error) {
@@ -126,21 +130,27 @@ export function useNFTStats(tokenId, refreshKey = 0) {
 
     useEffect(() => {
         if (!contract || tokenId === undefined) {
-            console.log('⏸️ useNFTStats: Waiting for contract or tokenId');
             return;
         }
 
         async function loadStats() {
             try {
-                console.log(`📊 Loading stats for NFT #${tokenId}... (refresh: ${refreshKey})`);
+                let statsArray = null;
+                let progressData = null;
 
-                // Try to load stats and progress
                 try {
-                    const [statsArray, progressData] = await Promise.all([
-                        contract.getTokenStats(tokenId),
-                        contract.getTokenProgress(tokenId)
-                    ]);
+                    statsArray = await contract.getTokenStats(tokenId);
+                } catch (statsErr) {
+                    // Silent fallback
+                }
 
+                try {
+                    progressData = await contract.getTokenProgress(tokenId);
+                } catch (progressErr) {
+                    // Silent fallback
+                }
+
+                if (statsArray && progressData) {
                     const statsObj = {
                         strength: Number(statsArray[0]),
                         intelligence: Number(statsArray[1]),
@@ -159,41 +169,35 @@ export function useNFTStats(tokenId, refreshKey = 0) {
                     };
 
                     setProgress(progressObj);
-
-                    console.log('✅ Stats loaded from contract for NFT #' + tokenId);
-                    console.log('   📊 Stats:', statsObj);
-                    console.log('   📈 Progress:', progressObj);
-
-                    // Check if all stats are default (5)
-                    const allDefault = Object.values(statsObj).every(v => v === 5);
-                    if (allDefault) {
-                        console.log('   ℹ️ All stats are default (5). Use Train to increase stats!');
+                } else {
+                    if (statsArray) {
+                        const statsObj = {
+                            strength: Number(statsArray[0]),
+                            intelligence: Number(statsArray[1]),
+                            speed: Number(statsArray[2]),
+                            endurance: Number(statsArray[3]),
+                            luck: Number(statsArray[4])
+                        };
+                        setStats(statsObj);
+                    } else {
+                        setStats({
+                            strength: 5,
+                            intelligence: 5,
+                            speed: 5,
+                            endurance: 5,
+                            luck: 5
+                        });
                     }
-                } catch (err) {
-                    console.warn('⚠️ Could not load extended stats, using defaults:', err.message);
 
-                    // Use default stats
-                    setStats({
-                        strength: 5,
-                        intelligence: 5,
-                        speed: 5,
-                        endurance: 5,
-                        luck: 5
-                    });
-
-                    // Try to get XP directly even if progress fails
                     let currentXP = 0;
                     let currentLevel = 1;
                     try {
                         currentXP = Number(await contract.tokenXP(tokenId));
                         currentLevel = Number(await contract.version(tokenId));
-                        console.log('   ✅ Got XP directly:', currentXP);
-                        console.log('   ✅ Got Level directly:', currentLevel);
                     } catch (xpErr) {
-                        console.warn('   ⚠️ Could not get XP:', xpErr.message);
+                        // Silent fallback
                     }
 
-                    // Calculate progress manually
                     const xpForNextLevel = (currentLevel + 1) * 1000;
                     const xpProgress = Math.min(100, Math.floor((currentXP / xpForNextLevel) * 100));
 
@@ -324,28 +328,16 @@ export function usePoolStats() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        console.log('🔍 usePoolStats - contract:', contract ? 'Available' : 'Not available');
-        console.log('🔍 usePoolStats - account:', account || 'Not connected');
-
         if (!contract) {
-            console.warn('⚠️ usePoolStats: No contract available');
             return;
         }
 
         async function loadPoolStats() {
             try {
-                console.log('🔄 Loading pool stats...');
-
                 const totalStaked = await contract.totalStaked();
-                console.log('✅ Total staked:', Number(totalStaked));
-
                 const userStakes = account ? await contract.getUserStakes(account) : [];
-                console.log('✅ User stakes:', userStakes.length);
-
-                // Get contract address - handle both ethers v5 and v6
                 const contractAddress = contract.target || contract.address;
                 const balance = await contract.provider.getBalance(contractAddress);
-                console.log('✅ Contract balance:', ethers.formatEther(balance), 'MATIC');
 
                 setPoolStats({
                     totalStaked: Number(totalStaked),

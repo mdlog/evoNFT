@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 import { useContract } from './useContract';
-import { CONTRACT_ADDRESS } from '../config/contracts';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/contracts';
+
+// Add Transfer event to ABI
+const EXTENDED_ABI = [
+    ...CONTRACT_ABI,
+    'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
+];
+
+// Fallback RPC provider - use reliable public RPC
+const FALLBACK_RPC = 'https://rpc-amoy.polygon.technology';
+const fallbackProvider = new ethers.JsonRpcProvider(FALLBACK_RPC);
 
 // Simple in-memory cache
 const nftCache = new Map();
@@ -17,11 +28,6 @@ export function useAllNFTsFast() {
     const [totalMinted, setTotalMinted] = useState(0);
 
     useEffect(() => {
-        if (!contract) {
-            console.log('⏸️ useAllNFTsFast: Waiting for contract');
-            return;
-        }
-
         async function loadAllNFTs() {
             try {
                 console.log('⚡ Loading NFTs (ultra-fast mode)...');
@@ -30,19 +36,26 @@ export function useAllNFTsFast() {
                 const startTime = Date.now();
                 setLoading(true);
 
-                // Check cache first
-                const cacheKey = `nfts_${CONTRACT_ADDRESS}`;
-                const cached = nftCache.get(cacheKey);
-                if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-                    console.log('✅ Loaded from cache');
-                    setNfts(cached.data);
-                    setTotalMinted(cached.data.length);
-                    setLoading(false);
-                    return;
-                }
+                // Disable cache temporarily to debug
+                // const cacheKey = `nfts_${CONTRACT_ADDRESS}`;
+                // const cached = nftCache.get(cacheKey);
+                // if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+                //     console.log('✅ Loaded from cache');
+                //     setNfts(cached.data);
+                //     setTotalMinted(cached.data.length);
+                //     setLoading(false);
+                //     return;
+                // }
+
+                // Use fallback provider for reliability
+                const fastContract = new ethers.Contract(
+                    CONTRACT_ADDRESS,
+                    EXTENDED_ABI,
+                    fallbackProvider
+                );
 
                 // Get total minted
-                const total = await contract.totalMinted();
+                const total = await fastContract.totalMinted();
                 const totalNum = Number(total);
                 setTotalMinted(totalNum);
 
@@ -55,23 +68,67 @@ export function useAllNFTsFast() {
                     return;
                 }
 
-                // Load only owner and level (2 calls per NFT)
-                const nftPromises = [];
+                // Load NFTs one by one (no batch to avoid RPC limits)
+                console.log('   Loading tokens 0 to', totalNum - 1, '...');
+                const validNFTs = [];
+                
                 for (let i = 0; i < totalNum; i++) {
-                    nftPromises.push(loadMinimalNFT(i));
+                    try {
+                        const owner = await fastContract.ownerOf(i);
+                        const version = await fastContract.version(i);
+                        
+                        const commonCreatures = ['cat', 'rabbit'];
+                        const randomCreature = commonCreatures[i % commonCreatures.length];
+                        
+                        validNFTs.push({
+                            id: i,
+                            owner,
+                            level: Number(version),
+                            name: `EvoNFT #${i}`,
+                            description: 'An evolving NFT',
+                            rarity: 'common',
+                            creatureType: randomCreature,
+                            xp: 0,
+                            uri: '',
+                            nextEvolveTime: 0,
+                            canEvolve: false,
+                            attributes: []
+                        });
+                        
+                        console.log('   ✅ Loaded NFT #' + i);
+                        
+                        // Small delay to avoid rate limits
+                        if (i < totalNum - 1) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
+                    } catch (error) {
+                        console.warn(`   ⚠️ Skip NFT #${i}:`, error.message);
+                        // Still add to array with default data to prevent disappearing
+                        validNFTs.push({
+                            id: i,
+                            owner: '0x0000000000000000000000000000000000000000',
+                            level: 1,
+                            name: `EvoNFT #${i}`,
+                            description: 'An evolving NFT',
+                            rarity: 'common',
+                            creatureType: 'cat',
+                            xp: 0,
+                            uri: '',
+                            nextEvolveTime: 0,
+                            canEvolve: false,
+                            attributes: []
+                        });
+                    }
                 }
-
-                const loadedNFTs = await Promise.all(nftPromises);
-                const validNFTs = loadedNFTs.filter(nft => nft !== null);
 
                 const loadTime = Date.now() - startTime;
                 console.log(`   ✅ Loaded ${validNFTs.length} NFTs in ${loadTime}ms`);
 
-                // Cache the results
-                nftCache.set(cacheKey, {
-                    data: validNFTs,
-                    timestamp: Date.now()
-                });
+                // Disable cache temporarily
+                // nftCache.set(cacheKey, {
+                //     data: validNFTs,
+                //     timestamp: Date.now()
+                // });
 
                 setNfts(validNFTs);
                 setLoading(false);
@@ -82,40 +139,7 @@ export function useAllNFTsFast() {
             }
         }
 
-        // Load absolute minimum data
-        async function loadMinimalNFT(tokenId) {
-            try {
-                // Only 2 calls: owner and level
-                const [owner, version] = await Promise.all([
-                    contract.ownerOf(tokenId),
-                    contract.version(tokenId)
-                ]);
 
-                // Generate random creature type for placeholder (lowercase)
-                const commonCreatures = ['cat', 'rabbit'];
-                const randomCreature = commonCreatures[tokenId % commonCreatures.length];
-
-                return {
-                    id: tokenId,
-                    owner,
-                    level: Number(version),
-                    // Default display data (will be updated from metadata)
-                    name: `EvoNFT #${tokenId}`,
-                    description: 'An evolving NFT',
-                    rarity: 'common',
-                    creatureType: randomCreature, // lowercase for SVG
-                    xp: 0,
-                    uri: '',
-                    nextEvolveTime: 0,
-                    canEvolve: false,
-                    attributes: []
-                };
-
-            } catch (error) {
-                console.warn(`   ⚠️ Skip NFT #${tokenId}`);
-                return null;
-            }
-        }
 
         loadAllNFTs();
     }, [contract]);

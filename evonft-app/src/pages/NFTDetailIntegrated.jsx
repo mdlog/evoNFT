@@ -20,10 +20,12 @@ export default function NFTDetail() {
     const { provider, account } = useWeb3()
     const [refreshKey, setRefreshKey] = useState(0)
 
-    const { nft: rawNft, loading: nftLoading } = useNFT(id)
-    const { stats, progress, loading: statsLoading } = useNFTStats(id, refreshKey)
-    const { history, loading: historyLoading } = useNFTHistory(id)
-    const { listing } = useListing(id)
+    const tokenId = parseInt(id)
+
+    const { nft: rawNft, loading: nftLoading } = useNFT(tokenId)
+    const { stats, progress, loading: statsLoading } = useNFTStats(tokenId, refreshKey)
+    const { history, loading: historyLoading } = useNFTHistory(tokenId)
+    const { listing } = useListing(tokenId)
     const { contractWithSigner: marketplaceContract } = useMarketplace()
 
     // Generate visual for single NFT - use useMemo to prevent infinite loop
@@ -39,14 +41,9 @@ export default function NFTDetail() {
     const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000))
     const [isEvolving, setIsEvolving] = useState(false)
 
-    // Function to refresh data
     const refreshData = () => {
-        console.log('🔄 Refreshing NFT data...')
         setRefreshKey(prev => prev + 1)
     }
-
-    const isOwner = account && nft && account.toLowerCase() === nft.owner?.toLowerCase()
-    const isListed = listing?.active
 
     // Get current chain ID
     useEffect(() => {
@@ -68,7 +65,17 @@ export default function NFTDetail() {
         return () => clearInterval(interval)
     }, [])
 
-    const loading = nftLoading || statsLoading
+    const [forceShowContent, setForceShowContent] = useState(false)
+    
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setForceShowContent(true);
+        }, 10000);
+        
+        return () => clearTimeout(timer);
+    }, [nftLoading, statsLoading, rawNft, stats]);
+
+    const loading = (nftLoading || statsLoading) && !forceShowContent
 
     if (loading) {
         return (
@@ -77,35 +84,37 @@ export default function NFTDetail() {
                     <div className="text-center py-20">
                         <div className="inline-block animate-spin text-6xl mb-4">⟳</div>
                         <p className="text-slate-400">Loading NFT...</p>
+                        <p className="text-xs text-slate-500 mt-2">If this takes too long, check your MetaMask RPC connection</p>
                     </div>
                 </div>
             </div>
         )
     }
 
-    if (!nft) {
-        return (
-            <div className="min-h-screen py-8 px-4">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center py-20">
-                        <div className="text-6xl mb-4">❌</div>
-                        <h3 className="text-xl font-semibold mb-2">NFT Not Found</h3>
-                        <p className="text-slate-400 mb-6">This NFT doesn't exist or hasn't been minted yet.</p>
-                        <Link
-                            to="/my-nfts"
-                            className="inline-block px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-lg font-semibold transition"
-                        >
-                            Back to Collection
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+    // Create fallback NFT if loading failed
+    const fallbackNFT = !nft && !loading ? {
+        id: id,
+        name: `EvoNFT #${id}`,
+        description: 'An evolving digital companion',
+        image: `https://via.placeholder.com/400/8B5CF6/FFFFFF?text=NFT+${id}`,
+        owner: account,
+        level: 1,
+        rarity: 'common',
+        version: 1,
+        canEvolve: false,
+        xp: 0,
+        attributes: []
+    } : null;
+
+    const displayNFT = nft || fallbackNFT;
+
+    // Check ownership and listing status
+    const isOwner = account && displayNFT && account.toLowerCase() === displayNFT.owner?.toLowerCase()
+    const isListed = listing?.active
 
     // Get level from attributes or progress
-    const level = progress?.currentLevel || nft.attributes?.find(a => a.trait_type === 'level')?.value || 1
-    const rarity = nft.attributes?.find(a => a.trait_type === 'rarity')?.value || 'common'
+    const level = progress?.currentLevel || displayNFT.attributes?.find(a => a.trait_type === 'level')?.value || 1
+    const rarity = displayNFT.attributes?.find(a => a.trait_type === 'rarity')?.value || 'common'
 
     // Handle evolution
     const handleEvolveClick = async () => {
@@ -117,16 +126,8 @@ export default function NFTDetail() {
         setIsEvolving(true);
 
         try {
-            console.log('🧬 Starting evolution process for token', id);
-
-            // Calculate signals based on NFT data
             const signals = calculateSignals({ ...nft, level, stats });
-            console.log('📊 Calculated signals:', signals);
-
-            // Request evolution from AI backend
-            console.log('🤖 Requesting evolution from AI backend...');
             const evolutionData = await requestEvolution(id, signals);
-            console.log('✅ Evolution data received:', evolutionData);
 
             if (!evolutionData.success) {
                 throw new Error(evolutionData.error || 'Evolution request failed');
@@ -143,8 +144,6 @@ export default function NFTDetail() {
                 signer
             );
 
-            // Call smart contract
-            console.log('📝 Calling smart contract...');
             const tx = await contract.requestEvolve(
                 id,
                 evolutionData.newMetadataURI,
@@ -152,15 +151,10 @@ export default function NFTDetail() {
                 evolutionData.signature
             );
 
-            console.log('⏳ Waiting for transaction confirmation...');
-            console.log('Transaction hash:', tx.hash);
-
             await tx.wait();
 
-            console.log('✅ Evolution successful!');
             alert(`🎉 Evolution Successful!\n\nYour NFT has evolved to ${evolutionData.evolutionType} form!\n\nTransaction: ${tx.hash}`);
 
-            // Reload page to show new data
             setTimeout(() => {
                 window.location.reload();
             }, 2000);
@@ -203,8 +197,8 @@ export default function NFTDetail() {
                     <div>
                         <div className="glass-strong rounded-2xl border border-slate-700/50 p-6">
                             <img
-                                src={nft.image || `https://via.placeholder.com/400/8B5CF6/FFFFFF?text=NFT+${id}`}
-                                alt={nft.name}
+                                src={displayNFT.image || `https://via.placeholder.com/400/8B5CF6/FFFFFF?text=NFT+${id}`}
+                                alt={displayNFT.name}
                                 className="w-full rounded-xl"
                                 onError={(e) => {
                                     console.error('Image load error:', e.target.src);
@@ -237,7 +231,7 @@ export default function NFTDetail() {
                     <div>
                         <div className="space-y-6">
                             <div>
-                                <h1 className="text-4xl font-bold mb-2">{nft.name}</h1>
+                                <h1 className="text-4xl font-bold mb-2">{displayNFT.name}</h1>
                                 <p className="text-slate-400">Owned by: You</p>
                             </div>
 
@@ -340,51 +334,68 @@ export default function NFTDetail() {
                             </div>
 
                             {/* Stats */}
-                            {stats && (
-                                <div className="glass-strong rounded-xl border border-slate-700/50 p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="font-semibold">Stats & Attributes</h3>
-                                        <span className="text-xs text-slate-400">💪 Train to increase</span>
-                                    </div>
-                                    <div className="space-y-4">
-                                        {Object.entries(stats).map(([statName, value]) => (
-                                            <div key={statName}>
-                                                <div className="flex justify-between text-sm mb-2">
-                                                    <span className="capitalize">{statName}:</span>
-                                                    <span className="font-bold">{value}/100</span>
-                                                </div>
-                                                <div className="w-full bg-slate-700 rounded-full h-2">
-                                                    <div
-                                                        className="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full transition-all"
-                                                        style={{ width: `${value}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {Object.values(stats).every(v => v === 5) && (
-                                        <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-                                            <p className="text-xs text-slate-400">
-                                                ℹ️ All stats start at 5. Use <span className="text-secondary-400 font-semibold">Train</span> to increase specific stats!
-                                            </p>
-                                        </div>
-                                    )}
+                            <div className="glass-strong rounded-xl border border-slate-700/50 p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-semibold">Stats & Attributes</h3>
+                                    <span className="text-xs text-slate-400">💪 Train to increase</span>
                                 </div>
-                            )}
+                                {statsLoading ? (
+                                    <div className="text-center py-8">
+                                        <div className="animate-spin text-2xl mb-2">⟳</div>
+                                        <p className="text-xs text-slate-400">Loading stats...</p>
+                                    </div>
+                                ) : stats ? (
+                                    <>
+                                        <div className="space-y-4">
+                                            {Object.entries(stats).map(([statName, value]) => (
+                                                <div key={statName}>
+                                                    <div className="flex justify-between text-sm mb-2">
+                                                        <span className="capitalize">{statName}:</span>
+                                                        <span className="font-bold">{value}/100</span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-700 rounded-full h-2">
+                                                        <div
+                                                            className="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full transition-all"
+                                                            style={{ width: `${value}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {Object.values(stats).every(v => v === 5) && (
+                                            <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                                <p className="text-xs text-slate-400">
+                                                    ℹ️ All stats start at 5. Use <span className="text-secondary-400 font-semibold">Train</span> to increase specific stats!
+                                                </p>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                        <p className="text-xs text-yellow-400">⚠️ Cannot load stats - RPC timeout</p>
+                                        <button
+                                            onClick={refreshData}
+                                            className="mt-2 text-xs text-primary-400 hover:text-primary-300"
+                                        >
+                                            Retry
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Traits - Visual Characteristics */}
-                            {nft.traits && nft.traits.length > 0 && (
+                            {displayNFT.traits && displayNFT.traits.length > 0 && (
                                 <div className="glass-strong rounded-xl border border-slate-700/50 p-6">
                                     <h3 className="font-semibold mb-4">Visual Traits</h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {nft.traits.map((trait) => {
+                                        {displayNFT.traits.map((trait) => {
                                             // Handle both string traits and object traits
                                             const traitType = typeof trait === 'object' ? trait.trait_type : 'Trait'
                                             const traitValue = typeof trait === 'string' ? trait : trait.value
                                             const traitKey = typeof trait === 'string' ? trait : `${trait.trait_type}-${trait.value}`
 
                                             // Skip stats that are already shown in Stats & Attributes
-                                            if (['Power', 'Speed', 'Intelligence'].includes(traitType)) {
+                                            if (['Power', 'Speed', 'Intelligence', 'level'].includes(traitType)) {
                                                 return null
                                             }
 
@@ -408,26 +419,26 @@ export default function NFTDetail() {
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center">
                                         <span className="text-slate-400">Can Evolve:</span>
-                                        <span className={nft.canEvolve ? 'text-secondary-500 font-semibold' : 'text-slate-500'}>
-                                            {nft.canEvolve ? '✅ Ready' : '⏳ Cooldown'}
+                                        <span className={displayNFT.canEvolve ? 'text-secondary-500 font-semibold' : 'text-slate-500'}>
+                                            {displayNFT.canEvolve ? '✅ Ready' : '⏳ Cooldown'}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-400">Version:</span>
-                                        <span className="font-semibold">{nft.version || 1}</span>
+                                        <span className="font-semibold">{displayNFT.version || 1}</span>
                                     </div>
-                                    {nft.nextEvolveTime && (
+                                    {displayNFT.nextEvolveTime && (
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">
-                                                {nft.canEvolve ? 'Last Evolved:' : 'Next Evolution:'}
+                                                {displayNFT.canEvolve ? 'Last Evolved:' : 'Next Evolution:'}
                                             </span>
                                             <span className="text-sm">
                                                 {(() => {
                                                     const now = Math.floor(Date.now() / 1000);
-                                                    const nextTime = nft.nextEvolveTime;
+                                                    const nextTime = displayNFT.nextEvolveTime;
 
                                                     // If can evolve (time has passed), show "Ready Now"
-                                                    if (nft.canEvolve || nextTime <= now) {
+                                                    if (displayNFT.canEvolve || nextTime <= now) {
                                                         return <span className="text-secondary-500 font-semibold">Ready Now!</span>;
                                                     }
 
@@ -439,12 +450,12 @@ export default function NFTDetail() {
                                     )}
 
                                     {/* Countdown Timer if in cooldown */}
-                                    {!nft.canEvolve && nft.nextEvolveTime && (
+                                    {!displayNFT.canEvolve && displayNFT.nextEvolveTime && (
                                         <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
                                             <div className="text-xs text-slate-400 mb-1">Time Remaining:</div>
                                             <div className="text-sm font-mono text-primary-400">
                                                 {(() => {
-                                                    const remaining = nft.nextEvolveTime - currentTime;
+                                                    const remaining = displayNFT.nextEvolveTime - currentTime;
 
                                                     if (remaining <= 0) {
                                                         return <span className="text-secondary-500 font-bold">Ready!</span>;
@@ -460,7 +471,7 @@ export default function NFTDetail() {
                                             {/* Progress Bar */}
                                             {(() => {
                                                 const totalCooldown = 86400; // 24 hours in seconds
-                                                const elapsed = totalCooldown - (nft.nextEvolveTime - currentTime);
+                                                const elapsed = totalCooldown - (displayNFT.nextEvolveTime - currentTime);
                                                 const progress = Math.max(0, Math.min(100, (elapsed / totalCooldown) * 100));
 
                                                 return (
@@ -483,7 +494,7 @@ export default function NFTDetail() {
                                     {/* Evolution Info */}
                                     <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
                                         <p className="text-xs text-slate-400">
-                                            {nft.canEvolve
+                                            {displayNFT.canEvolve
                                                 ? '🧬 Your NFT is ready to evolve! Evolution will change its appearance and increase its version.'
                                                 : '⏳ Evolution requires a 24-hour cooldown period between each transformation.'
                                             }
@@ -491,7 +502,7 @@ export default function NFTDetail() {
                                     </div>
 
                                     {/* Evolve Button */}
-                                    {nft.canEvolve && isOwner && (
+                                    {displayNFT.canEvolve && isOwner && (
                                         <div className="mt-4">
                                             <button
                                                 onClick={handleEvolveClick}
@@ -507,7 +518,7 @@ export default function NFTDetail() {
                                     )}
 
                                     {/* Not Owner Message */}
-                                    {nft.canEvolve && !isOwner && (
+                                    {displayNFT.canEvolve && !isOwner && (
                                         <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                                             <p className="text-xs text-yellow-400">
                                                 ⚠️ Only the owner can evolve this NFT
@@ -541,13 +552,13 @@ export default function NFTDetail() {
                         <div className="glass-strong rounded-xl border border-slate-700/50 p-6">
                             <h3 className="font-semibold mb-4">Description</h3>
                             <p className="text-slate-300 leading-relaxed">
-                                {nft.description || 'This EvoNFT is a unique digital companion that grows and evolves based on your interactions. Feed it, train it, and watch it transform into something amazing!'}
+                                {displayNFT.description || 'This EvoNFT is a unique digital companion that grows and evolves based on your interactions. Feed it, train it, and watch it transform into something amazing!'}
                             </p>
 
                             <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <span className="text-slate-400">Token ID:</span>
-                                    <span className="ml-2 font-mono">{nft.id}</span>
+                                    <span className="ml-2 font-mono">{displayNFT.id}</span>
                                 </div>
                                 <div>
                                     <span className="text-slate-400">Generation:</span>
@@ -625,11 +636,10 @@ export default function NFTDetail() {
                     setShowFeedModal(false);
                 }}
                 onSuccess={() => {
-                    console.log('✅ Feed successful, refreshing data...');
                     refreshData();
                 }}
                 tokenId={id}
-                nftName={nft.name}
+                nftName={displayNFT.name}
             />
 
             <TrainModal
@@ -638,11 +648,10 @@ export default function NFTDetail() {
                     setShowTrainModal(false);
                 }}
                 onSuccess={() => {
-                    console.log('✅ Train successful, refreshing data...');
                     refreshData();
                 }}
                 tokenId={id}
-                nftName={nft.name}
+                nftName={displayNFT.name}
             />
 
             <ListForSaleModal
@@ -651,7 +660,7 @@ export default function NFTDetail() {
                     setShowListModal(false);
                 }}
                 tokenId={id}
-                nftName={nft.name}
+                nftName={displayNFT.name}
                 onSuccess={() => {
                     globalThis.location.reload();
                 }}

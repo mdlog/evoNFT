@@ -32,13 +32,12 @@ export const NETWORKS = {
 // Current Network (change for production)
 export const CURRENT_NETWORK = NETWORKS.AMOY;
 
-// Contract Address (update after deployment)
-export const CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT || import.meta.env.VITE_CONTRACT_ADDRESS || '0xe31d18Fb9925f677451845997f64806a88264b3D';
+// Contract Address - Read from environment variables
+export const CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT || '';
 
-// Debug: Log contract address
-console.log('🔍 Contract Address:', CONTRACT_ADDRESS);
-console.log('🔍 VITE_NFT_CONTRACT:', import.meta.env.VITE_NFT_CONTRACT);
-console.log('🔍 All env vars:', import.meta.env);
+if (!CONTRACT_ADDRESS) {
+    console.error('❌ VITE_NFT_CONTRACT not set in .env file!');
+}
 
 // Contract ABI (minimal for frontend)
 export const CONTRACT_ABI = [

@@ -6,8 +6,9 @@ async function main() {
     const [signer] = await hre.ethers.getSigners();
     console.log("Minting with account:", signer.address);
 
-    const contractAddress = "0xe31d18Fb9925f677451845997f64806a88264b3D";
+    const contractAddress = process.env.VITE_NFT_CONTRACT || process.env.NFT_CONTRACT;
     const contract = await hre.ethers.getContractAt("EvolvableNFTExtended", contractAddress);
+    console.log("Contract address:", contractAddress);
 
     // Check current total
     const totalBefore = await contract.totalMinted();

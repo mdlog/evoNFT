@@ -20,10 +20,6 @@ const PINATA_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
  */
 export async function uploadMetadataToIPFS(metadata) {
     try {
-        console.log('📤 Uploading metadata to IPFS via Pinata...');
-        console.log('Metadata:', metadata);
-
-        // Check if Pinata credentials are configured
         if (!PINATA_JWT && (!PINATA_API_KEY || !PINATA_SECRET_KEY)) {
             console.warn('⚠️ Pinata credentials not configured, using mock IPFS');
             return generateMockIPFSUri(metadata);
@@ -59,20 +55,10 @@ export async function uploadMetadataToIPFS(metadata) {
         const ipfsHash = response.data.IpfsHash;
         const ipfsUri = `ipfs://${ipfsHash}`;
 
-        console.log('✅ Uploaded to IPFS:', ipfsUri);
-        console.log('   Gateway URL:', `${PINATA_GATEWAY}/${ipfsHash}`);
-
         return ipfsUri;
 
     } catch (error) {
         console.error('❌ IPFS upload error:', error.message);
-
-        if (error.response) {
-            console.error('   Status:', error.response.status);
-            console.error('   Data:', error.response.data);
-        }
-
-        // Fallback to mock IPFS
         console.warn('⚠️ Falling back to mock IPFS');
         return generateMockIPFSUri(metadata);
     }
@@ -85,8 +71,6 @@ export async function uploadMetadataToIPFS(metadata) {
  */
 export async function uploadImageToIPFS(file) {
     try {
-        console.log('📤 Uploading image to IPFS via Pinata...');
-
         if (!PINATA_JWT && (!PINATA_API_KEY || !PINATA_SECRET_KEY)) {
             throw new Error('Pinata credentials not configured');
         }
@@ -120,7 +104,6 @@ export async function uploadImageToIPFS(file) {
         const ipfsHash = response.data.IpfsHash;
         const ipfsUri = `ipfs://${ipfsHash}`;
 
-        console.log('✅ Image uploaded to IPFS:', ipfsUri);
         return ipfsUri;
 
     } catch (error) {
@@ -149,10 +132,8 @@ export function getIPFSGatewayUrl(ipfsUri) {
 export async function fetchMetadataFromIPFS(ipfsUri) {
     try {
         const url = getIPFSGatewayUrl(ipfsUri);
-        console.log('📥 Fetching metadata from:', url);
-
         const response = await axios.get(url, {
-            timeout: 10000 // 10 second timeout
+            timeout: 10000
         });
 
         return response.data;
@@ -169,8 +150,6 @@ export async function fetchMetadataFromIPFS(ipfsUri) {
  */
 export async function testPinataConnection() {
     try {
-        console.log('🔍 Testing Pinata connection...');
-
         if (!PINATA_JWT && (!PINATA_API_KEY || !PINATA_SECRET_KEY)) {
             console.error('❌ Pinata credentials not configured');
             return false;
@@ -188,7 +167,6 @@ export async function testPinataConnection() {
             { headers }
         );
 
-        console.log('✅ Pinata connection successful:', response.data);
         return true;
 
     } catch (error) {
@@ -208,7 +186,6 @@ function generateMockIPFSUri(metadata) {
 
     try {
         localStorage.setItem(`ipfs_${mockCID}`, JSON.stringify(metadata));
-        console.log('💾 Stored mock metadata in localStorage:', mockCID);
     } catch (err) {
         console.warn('⚠️ Could not store mock metadata:', err.message);
     }
@@ -227,7 +204,6 @@ export function getMockMetadata(ipfsUri) {
         const stored = localStorage.getItem(`ipfs_${hash}`);
 
         if (stored) {
-            console.log('📦 Retrieved mock metadata from localStorage');
             return JSON.parse(stored);
         }
     } catch (err) {

@@ -32,7 +32,7 @@ export const NETWORKS = {
 export const CURRENT_NETWORK = NETWORKS.AMOY;
 
 // Contract Addresses (update after deployment)
-export const NFT_CONTRACT = import.meta.env.VITE_NFT_CONTRACT || '';
+export const NFT_CONTRACT = '0xe31d18Fb9925f677451845997f64806a88264b3D'; // Updated to working contract
 export const STAKING_CONTRACT = import.meta.env.VITE_STAKING_CONTRACT || '';
 export const BREEDING_CONTRACT = import.meta.env.VITE_BREEDING_CONTRACT || '';
 export const MARKETPLACE_CONTRACT = import.meta.env.VITE_MARKETPLACE_CONTRACT || '';

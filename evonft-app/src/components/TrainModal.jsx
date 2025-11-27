@@ -7,15 +7,14 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSucces
     const { contract, contractWithSigner } = useNFTExtended();
     const { stats, loading } = useNFTStats(tokenId);
     const [training, setTraining] = useState(false);
+    const [trainingStatus, setTrainingStatus] = useState('');
     const [selectedStat, setSelectedStat] = useState(null);
     const [trainPrice, setTrainPrice] = useState('0.3');
 
-    // Get train price from contract
     useEffect(() => {
         if (contract) {
             contract.getTrainPrice().then(price => {
                 setTrainPrice(ethers.formatEther(price));
-                console.log('💰 Train price from contract:', ethers.formatEther(price), 'MATIC');
             }).catch(err => {
                 console.warn('⚠️ Could not get train price, using default:', err.message);
             });
@@ -76,17 +75,8 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSucces
         try {
             setTraining(true);
 
-            console.log('🏋️ Starting train transaction...');
-            console.log('   Token ID:', tokenId);
-            console.log('   Stat Type:', selectedStat.type, '(' + selectedStat.name + ')');
-            console.log('   Price:', TRAIN_PRICE, 'MATIC');
-            console.log('   Contract:', contractWithSigner.target || contractWithSigner.address);
-
-            // Pre-check: verify ownership
             const owner = await contractWithSigner.ownerOf(tokenId);
             const signer = await contractWithSigner.runner.getAddress();
-            console.log('   Owner:', owner);
-            console.log('   Signer:', signer);
 
             if (owner.toLowerCase() !== signer.toLowerCase()) {
                 throw new Error('You are not the owner of this NFT');
@@ -97,13 +87,11 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSucces
                 throw new Error('This stat is already at maximum (100)');
             }
 
-            // Try to estimate gas first
             let gasLimit;
             try {
                 gasLimit = await contractWithSigner.train.estimateGas(tokenId, selectedStat.type, {
                     value: ethers.parseEther(TRAIN_PRICE)
                 });
-                console.log('   Estimated gas:', gasLimit.toString());
             } catch (estimateError) {
                 console.error('❌ Gas estimation failed:', estimateError.message);
 
@@ -122,36 +110,29 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSucces
                 throw new Error('Transaction will fail. Please check: 1) NFT exists, 2) You own it, 3) Stat not maxed, 4) Sufficient balance');
             }
 
+            setTrainingStatus('Sending transaction...');
             const tx = await contractWithSigner.train(tokenId, selectedStat.type, {
                 value: ethers.parseEther(TRAIN_PRICE),
                 gasLimit: gasLimit
             });
 
-            console.log('Train transaction sent:', tx.hash);
+            setTrainingStatus(`Waiting for confirmation...\nTx: ${tx.hash.slice(0, 10)}...`);
+            
             const receipt = await tx.wait();
-            console.log('Train transaction confirmed:', receipt);
 
-            // Success feedback
-            alert(`Successfully trained ${selectedStat.name}! +1 ${selectedStat.name} and +100 XP gained!\n\nRefreshing NFT data...`);
-
-            // Wait a bit for blockchain to update
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            setTrainingStatus('✅ Success! Updating data...');
 
             // Call onSuccess callback if provided
             if (onSuccess) {
                 onSuccess();
             }
 
+            // Show success for 1 second then close
+            await new Promise(resolve => setTimeout(resolve, 1000));
             onClose();
 
         } catch (error) {
             console.error('❌ Train error:', error);
-            console.error('Error details:', {
-                message: error.message,
-                code: error.code,
-                reason: error.reason,
-                data: error.data
-            });
 
             let errorMessage = 'Failed to train NFT';
 
@@ -176,17 +157,10 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSucces
 
             alert(errorMessage);
 
-            // Show detailed help
-            if (error.message.includes('Transaction will fail')) {
-                console.log('💡 Troubleshooting tips:');
-                console.log('   1. Make sure NFT #' + tokenId + ' exists (check My NFTs page)');
-                console.log('   2. Verify you own this NFT');
-                console.log('   3. Check stat is not already 100');
-                console.log('   4. Ensure you have at least 0.35 MATIC (0.3 + gas)');
-            }
-            console.error('📋 Full error for debugging:', JSON.stringify(error, null, 2));
+            // Silent error handling
         } finally {
             setTraining(false);
+            setTrainingStatus('');
         }
     }
 
@@ -328,9 +302,12 @@ export default function TrainModal({ isOpen, onClose, tokenId, nftName, onSucces
                             className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {training ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <span className="animate-spin">⟳</span>
-                                    Training...
+                                <span className="flex flex-col items-center justify-center gap-1">
+                                    <span className="flex items-center gap-2">
+                                        <span className="animate-spin">⟳</span>
+                                        {trainingStatus.includes('✅') ? 'Success!' : 'Processing...'}
+                                    </span>
+                                    <span className="text-xs opacity-80 whitespace-pre-line">{trainingStatus}</span>
                                 </span>
                             ) : (
                                 `Train ${selectedStat ? selectedStat.name : 'Stat'}`
