@@ -37,16 +37,19 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect }) {
     // Check if listed - use listing existence as source of truth
     const isListed = !!listing && listing.active !== false
 
-    // Debug logging for all NFTs
-    console.log(`🎴 NFT Card #${nft.id}:`, {
-        nftId: nft.id,
-        nftIdNum,
-        isListed,
-        hasListing: !!listing,
-        listingPrice: listing?.price,
-        listingActive: listing?.active,
-        allListingIds: listings.map(l => Number(l.tokenId))
-    })
+    // Debug logging for NFT #2
+    if (nft.id == 2) {
+        console.log(`🔍 DEBUG NFT #${nft.id}:`, {
+            nftId: nft.id,
+            nftIdNum,
+            isListed,
+            hasListing: !!listing,
+            listingPrice: listing?.price,
+            listingActive: listing?.active,
+            allListings: listings,
+            allListingIds: listings.map(l => Number(l.tokenId))
+        });
+    }
 
     // Get owner address
     const ownerAddress = displayNFT.owner || nft.owner
@@ -110,6 +113,15 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect }) {
 
                         {/* Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                        {/* FOR SALE Badge - Most prominent */}
+                        {isListed && (
+                            <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-20">
+                                <div className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full text-sm font-bold shadow-xl border-2 border-white/20 animate-pulse">
+                                    💰 FOR SALE
+                                </div>
+                            </div>
+                        )}
 
                         {/* Level Badge */}
                         <div className="absolute top-3 right-3">
@@ -185,6 +197,11 @@ function NFTCardWithListing({ nft, listedTokenIds, listings, onSelect }) {
                             ) : (
                                 <div className="text-center text-sm text-slate-500 py-2">
                                     Not for sale
+                                    {nft.id == 2 && (
+                                        <div className="text-xs text-red-400 mt-1">
+                                            DEBUG: Should be listed!
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
