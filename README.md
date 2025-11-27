@@ -115,11 +115,63 @@ Each NFT has **5 trainable stats** (max 100 each):
    - 31-90 days: 0.015 MATIC/day
    - 90+ days: 0.02 MATIC/day
 
+### Evolve Your NFT
+1. Go to "My NFTs"
+2. Click on your NFT
+3. Click "Evolve" button (when available)
+4. Wait for AI processing
+5. Get new appearance & increased version
+
 ### Trade in Marketplace
 1. List your NFT for sale (free)
 2. Set your price
 3. Buyers pay price + 2.5% fee
 4. Instant transfer on purchase
+
+---
+
+## 🧬 Evolution System
+
+EvoNFT features a **revolutionary AI-driven evolution system** that transforms your NFT's appearance based on real activity and interaction patterns.
+
+### How Evolution Works
+
+**AI-Powered Transformation**
+- Evolution uses **machine learning algorithms** to generate new artwork
+- Each evolution creates **unique, one-of-a-kind** visual variations
+- NFT appearance changes while **preserving core identity**
+- **Version number increases** with each successful evolution
+
+**Activity Signal Calculation**
+- System analyzes your NFT's **interaction history**
+- Factors include: training frequency, feeding patterns, staking duration
+- Higher activity scores = more dramatic evolution changes
+- **Smart algorithm** prevents gaming the system
+
+**Security & Verification**
+- Uses **EIP-712 cryptographic signatures** for secure evolution requests
+- **AI backend validation** ensures legitimate evolution triggers
+- **24-hour cooldown** prevents spam and maintains rarity
+- All evolutions are **permanently recorded** on-chain
+
+### Evolution Requirements
+
+| Requirement | Details |
+|-------------|----------|
+| **Cooldown** | 24 hours between evolutions |
+| **Activity** | Minimum interaction threshold |
+| **Ownership** | Must own the NFT |
+| **Network** | Polygon Amoy Testnet |
+| **Cost** | Free (only gas fees) |
+
+### Technical Implementation
+
+- **Smart Contract**: `requestEvolve()` function with signature verification
+- **AI Backend**: Node.js service generating evolution signatures
+- **IPFS Storage**: New metadata uploaded to decentralized storage
+- **Frontend Integration**: Real-time evolution status and countdown timers
+
+**Evolution creates truly dynamic NFTs that grow and change with your engagement!**
 
 ---
 
